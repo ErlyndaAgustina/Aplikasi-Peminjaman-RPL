@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../sidebar/sidebar_peminjam.dart';
 import 'widgets/summary_section.dart';
 import 'widgets/quick_access_section.dart';
 import 'widgets/transaksi_card.dart';
@@ -14,6 +15,7 @@ class DashboardPeminjamPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
+      drawer: const SidebarPeminjamDrawer(),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
@@ -37,9 +39,11 @@ class DashboardPeminjamPage extends StatelessWidget {
                     color: const Color.fromRGBO(217, 253, 240, 0.49),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.menu,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                  child: Builder(
+                    builder: (context) => GestureDetector(
+                      onTap: () => Scaffold.of(context).openDrawer(),
+                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),

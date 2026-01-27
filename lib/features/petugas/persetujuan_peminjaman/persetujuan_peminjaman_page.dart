@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../persetujuan_peminjaman/models/model.dart';
 import '../persetujuan_peminjaman/widgets/peminjaman_card.dart';
+import '../sidebar/sidebar_petugas.dart';
 
 const String roboto = 'Roboto';
 
@@ -57,6 +58,7 @@ class _PersetujuanPeminjamanPageState extends State<PersetujuanPeminjamanPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
+      drawer: const SidebarPetugasDrawer(),
       body: Column(
         children: [
           /// ================= HEADER + TAB =================
@@ -78,9 +80,14 @@ class _PersetujuanPeminjamanPageState extends State<PersetujuanPeminjamanPage>
                             color: const Color.fromRGBO(217, 253, 240, 0.49),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(
-                            Icons.menu,
-                            color: Color.fromRGBO(62, 159, 127, 1),
+                          child: Builder(
+                            builder: (context) => GestureDetector(
+                              onTap: () => Scaffold.of(context).openDrawer(),
+                              child: Icon(
+                                Icons.menu,
+                                color: Color.fromRGBO(62, 159, 127, 1),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -237,4 +244,3 @@ class _TabContent extends StatelessWidget {
     );
   }
 }
-

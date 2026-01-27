@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../sidebar/sidebar_admin.dart';
 import 'models/model.dart';
 import 'widgets/log_card.dart';
 
@@ -16,6 +17,7 @@ class _LogAktivitasPageState extends State<LogAktivitasPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
+      drawer: const SidebarAdminDrawer(),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
@@ -39,9 +41,11 @@ class _LogAktivitasPageState extends State<LogAktivitasPage> {
                     color: const Color.fromRGBO(217, 253, 240, 0.49),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.menu,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                  child: Builder(
+                    builder: (context) => GestureDetector(
+                      onTap: () => Scaffold.of(context).openDrawer(),
+                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../features/admin/dashboard/dashboard_page.dart';
+import '../features/peminjam/dashboard/dashboard_page.dart';
+import '../features/petugas/dashboard/dashboard_page.dart';
 
 const String roboto = 'Roboto';
 
@@ -11,6 +16,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                       const Text('Email'),
                       const SizedBox(height: 6),
                       TextField(
+                        controller: _emailController,
                         style: const TextStyle(
                           fontFamily: roboto,
                           fontSize: 14,
@@ -120,6 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                       const Text('Password'),
                       const SizedBox(height: 6),
                       TextField(
+                        controller: _passwordController,
                         obscureText: _obscurePassword,
                         style: const TextStyle(
                           fontFamily: roboto,
@@ -193,7 +202,59 @@ class _LoginPageState extends State<LoginPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () async {
+                            try {
+                              final authResponse = await Supabase
+                                  .instance
+                                  .client
+                                  .auth
+                                  .signInWithPassword(
+                                    email: _emailController.text.trim(),
+                                    password: _passwordController.text.trim(),
+                                  );
+
+                              final user = authResponse.user;
+                              if (user == null) return;
+
+                              final data = await Supabase.instance.client
+                                  .from('users')
+                                  .select('role')
+                                  .eq('auth_user_id', user.id)
+                                  .single();
+
+                              final role = data['role'];
+
+                              if (!context.mounted) return;
+
+                              if (role == 'admin') {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const DashboardAdminPage(),
+                                  ),
+                                );
+                              } else if (role == 'petugas') {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const DashboardPetugasPage(),
+                                  ),
+                                );
+                              } else if (role == 'peminjam') {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const DashboardPeminjamPage(),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              debugPrint('Login error: $e');
+                            }
+                          },
+
                           child: const Text(
                             'Masuk ke Akun',
                             style: TextStyle(

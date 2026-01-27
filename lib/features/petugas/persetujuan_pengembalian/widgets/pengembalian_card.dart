@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../detail_pengembalian/form_pengembalian_petugas_page.dart';
+import '../form_pengembalian/form_pengembalian_petugas_page.dart';
 import '../models/model.dart';
 
 const String roboto = 'Roboto';
@@ -158,11 +160,22 @@ class PengembalianCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 if (data.status == StatusPengembalian.dipinjam) {
-                  // TODO: navigasi ke proses pengembalian
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FormPengembalianPage(),
+                    ),
+                  );
                 } else {
-                  // TODO: navigasi ke detail pengembalian
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetailPengembalianPage(),
+                    ),
+                  );
                 }
               },
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
                 shape: RoundedRectangleBorder(

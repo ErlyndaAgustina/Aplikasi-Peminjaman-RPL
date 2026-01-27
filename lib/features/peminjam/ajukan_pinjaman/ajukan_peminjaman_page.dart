@@ -1,15 +1,152 @@
 import 'package:flutter/material.dart';
 import 'models/model.dart';
 import 'widgets/form_widgets.dart';
+import 'package:intl/intl.dart';
 
-class AjukanPeminjamanPage extends StatelessWidget {
+class AjukanPeminjamanPage extends StatefulWidget {
   const AjukanPeminjamanPage({super.key});
+
+  @override
+  State<AjukanPeminjamanPage> createState() => _AjukanPeminjamanPageState();
+}
+
+class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
   static const String roboto = 'Roboto';
+  
+  final TextEditingController _tanggalPinjamController = TextEditingController();
+  final TextEditingController _batasKembaliController = TextEditingController();
+  final TextEditingController _batasKembaliOtomatisController = TextEditingController();
+  
+  DateTime? _tanggalPinjam;
+  DateTime? _batasKembali;
+  String? _jamPelajaranAwal;
+  String? _jamPelajaranAkhir;
+
+  final List<String> _jamPelajaranList = [
+    'Jam Pelajaran 1',
+    'Jam Pelajaran 2',
+    'Jam Pelajaran 3',
+    'Jam Pelajaran 4',
+    'Jam Pelajaran 5',
+    'Jam Pelajaran 6',
+    'Jam Pelajaran 7',
+    'Jam Pelajaran 8',
+    'Jam Pelajaran 9',
+    'Jam Pelajaran 10',
+  ];
+
+  @override
+  void dispose() {
+    _tanggalPinjamController.dispose();
+    _batasKembaliController.dispose();
+    _batasKembaliOtomatisController.dispose();
+    super.dispose();
+  }
+
+  void _hitungBatasKembaliOtomatis() {
+    if (_batasKembali != null && _jamPelajaranAkhir != null) {
+      // Format batas kembali otomatis
+      String tanggal = DateFormat('dd MMMM yyyy').format(_batasKembali!);
+      setState(() {
+        _batasKembaliOtomatisController.text = '$tanggal - $_jamPelajaranAkhir';
+      });
+    } else {
+      setState(() {
+        _batasKembaliOtomatisController.text = '-';
+      });
+    }
+  }
+
+  Future<void> _pilihTanggal(BuildContext context, bool isPinjam) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color.fromRGBO(62, 159, 127, 1),
+              onPrimary: Colors.white,
+              onSurface: Color.fromRGBO(49, 47, 52, 1),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      String formatted = DateFormat('dd/MM/yyyy').format(picked);
+      setState(() {
+        if (isPinjam) {
+          _tanggalPinjam = picked;
+          _tanggalPinjamController.text = formatted;
+        } else {
+          _batasKembali = picked;
+          _batasKembaliController.text = formatted;
+          _hitungBatasKembaliOtomatis();
+        }
+      });
+    }
+  }
+
+  void _pilihJamPelajaran(bool isAwal) async {
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            isAwal ? 'Pilih Jam Pelajaran' : 'Pilih Sampai Jam Pelajaran',
+            style: const TextStyle(
+              fontFamily: roboto,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _jamPelajaranList.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(
+                    _jamPelajaranList[index],
+                    style: const TextStyle(
+                      fontFamily: roboto,
+                      fontSize: 14,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context, _jamPelajaranList[index]);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selected != null) {
+      setState(() {
+        if (isAwal) {
+          _jamPelajaranAwal = selected;
+        } else {
+          _jamPelajaranAkhir = selected;
+          _hitungBatasKembaliOtomatis();
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF7F2),
+      backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
@@ -27,15 +164,18 @@ class AjukanPeminjamanPage extends StatelessWidget {
             bottom: false,
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(217, 253, 240, 0.49),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(217, 253, 240, 0.49),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -160,39 +300,46 @@ class AjukanPeminjamanPage extends StatelessWidget {
       child: Column(
         children: [
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: BuildTextField(
                   label: 'Tanggal Pinjam',
-                  hint: '02/01/2026',
+                  hint: 'dd/mm/yyyy',
                   icon: Icons.calendar_today_outlined,
+                  isDate: true,
+                  controller: _tanggalPinjamController,
                 ),
               ),
-              SizedBox(width: 15),
+              const SizedBox(width: 15),
               Expanded(
                 child: BuildTextField(
                   label: 'Batas Kembali',
-                  hint: '02/01/2026',
+                  hint: 'dd/mm/yyyy',
                   icon: Icons.calendar_today_outlined,
+                  isDate: true,
+                  controller: _batasKembaliController,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          const BuildDropdownField(
+          BuildDropdownField(
             label: 'Jam Pelajaran',
-            hint: 'Pilih jam pelajaran',
+            hint: _jamPelajaranAwal ?? 'Pilih jam pelajaran',
+            onTap: () => _pilihJamPelajaran(true),
           ),
           const SizedBox(height: 16),
-          const BuildDropdownField(
+          BuildDropdownField(
             label: 'Sampai Jam Pelajaran',
-            hint: 'Pilih jam pelajaran',
+            hint: _jamPelajaranAkhir ?? 'Pilih jam pelajaran',
+            onTap: () => _pilihJamPelajaran(false),
           ),
           const SizedBox(height: 16),
-          const BuildTextField(
+          BuildTextField(
             label: 'Batas Kembali',
             hint: '-',
             isReadOnly: true,
+            controller: _batasKembaliOtomatisController,
           ),
         ],
       ),
@@ -224,7 +371,27 @@ class AjukanPeminjamanPage extends StatelessWidget {
       width: double.infinity,
       height: 40,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () {
+          // Validasi form
+          if (_tanggalPinjam == null || _batasKembali == null || 
+              _jamPelajaranAwal == null || _jamPelajaranAkhir == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Mohon lengkapi semua field'),
+                backgroundColor: Color.fromRGBO(235, 98, 26, 1),
+              ),
+            );
+            return;
+          }
+          
+          // Proses submit
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Permintaan peminjaman berhasil dikirim'),
+              backgroundColor: Color.fromRGBO(62, 159, 127, 1),
+            ),
+          );
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
           shape: RoundedRectangleBorder(

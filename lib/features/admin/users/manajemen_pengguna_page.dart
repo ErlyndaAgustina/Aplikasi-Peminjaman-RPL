@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../sidebar/sidebar_admin.dart';
 import '../users/widgets/model.dart';
 import '../users/widgets/card.dart';
 
@@ -15,6 +16,7 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const SidebarAdminDrawer(),
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
@@ -39,9 +41,11 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                     color: const Color.fromRGBO(217, 253, 240, 0.49),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.menu,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                  child: Builder(
+                    builder: (context) => GestureDetector(
+                      onTap: () => Scaffold.of(context).openDrawer(),
+                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),

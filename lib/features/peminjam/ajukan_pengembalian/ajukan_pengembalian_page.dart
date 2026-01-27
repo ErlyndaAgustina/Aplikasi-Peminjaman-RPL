@@ -1,25 +1,17 @@
-import 'package:aplikasi_peminjaman_rpl/features/petugas/dashboard/models/model.dart';
 import 'package:flutter/material.dart';
-import '../dashboard/widgets/summary_section.dart';
-import '../dashboard/widgets/quick_access_section.dart';
-import '../dashboard/widgets/transaksi_card.dart';
-import '../sidebar/sidebar_petugas.dart';
+import '../ajukan_pengembalian/models/model.dart';
+import '../ajukan_pengembalian/widgets/pengembalian_cart.dart';
+import '../sidebar/sidebar_peminjam.dart';
 
-const String roboto = 'Roboto';
+class AjukanPengembalianPage extends StatelessWidget {
+  const AjukanPengembalianPage({super.key});
+  static const String roboto = 'Roboto';
 
-class DashboardPetugasPage extends StatefulWidget {
-  const DashboardPetugasPage({super.key});
-
-  @override
-  State<DashboardPetugasPage> createState() => _DashboardPetugasPageState();
-}
-
-class _DashboardPetugasPageState extends State<DashboardPetugasPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
-      drawer: const SidebarPetugasDrawer(),
+      drawer: const SidebarPeminjamDrawer(),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
@@ -57,7 +49,7 @@ class _DashboardPetugasPageState extends State<DashboardPetugasPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text(
-                        'Dashboard Petugas',
+                        'Ajukan Pengembalian',
                         style: TextStyle(
                           fontFamily: roboto,
                           fontSize: 16,
@@ -90,49 +82,68 @@ class _DashboardPetugasPageState extends State<DashboardPetugasPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            const SummarySection(),
-            const SizedBox(height: 24),
-            const QuickAccessSection(),
-            const SizedBox(height: 24),
-            const Text(
-              'Peminjaman Aktif',
-              style: TextStyle(
-                fontFamily: roboto,
-                color: Color.fromRGBO(49, 47, 52, 1),
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Column(
-              children: dummyPeminjamanAktif
-                  .map((e) => TransaksiCard(data: e))
-                  .toList(),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Pengembalian Terbaru',
-              style: TextStyle(
-                fontFamily: roboto,
-                color: Color.fromRGBO(49, 47, 52, 1),
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Column(
-              children: dummyPengembalianTerbaru
-                  .map((e) => TransaksiCard(data: e))
-                  .toList(),
-            ),
-          ],
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: dummyPeminjaman.length,
+        itemBuilder: (context, index) => TransaksiCard(
+          transaksi: dummyPeminjaman[index],
+          onAjukanPengembalian: () {
+            _showPengembalianDialog(context, dummyPeminjaman[index]);
+          },
         ),
+      ),
+    );
+  }
+
+  void _showPengembalianDialog(BuildContext context, TransaksiModel transaksi) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Konfirmasi Pengembalian',
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin mengajukan pengembalian untuk ${transaksi.namaAlat}?',
+          style: const TextStyle(fontFamily: 'Roboto', fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Batal',
+              style: TextStyle(fontFamily: 'Roboto', color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Pengembalian berhasil diajukan'),
+                  backgroundColor: Color.fromRGBO(62, 159, 127, 1),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Ya, Ajukan',
+              style: TextStyle(fontFamily: 'Roboto', color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }

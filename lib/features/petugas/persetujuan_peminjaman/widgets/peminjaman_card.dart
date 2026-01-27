@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../detail_peminjaman/detail_peminjaman_page.dart';
 import '../models/model.dart';
 
 const String roboto = 'Roboto';
@@ -157,12 +158,21 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
             width: double.infinity,
             height: 40,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                // Navigasi ke Halaman Detail
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DetailPeminjamanPage(),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromRGBO(62, 159, 127, 1),
+                backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
+                elevation: 0, // Flat design sesuai gambar
               ),
               child: Text(
                 getButtonText(),

@@ -33,17 +33,23 @@ class DetailPeminjamanPage extends StatelessWidget {
             bottom: false,
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(217, 253, 240, 0.49),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(217, 253, 240, 0.49),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                    ),
                   ),
                 ),
+
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
