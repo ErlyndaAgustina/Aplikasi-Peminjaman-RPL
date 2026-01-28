@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../widgets/models.dart';
+import '../detail_alat/detail_alat_page.dart';
+import '../models/models.dart';
+import 'delete_alat_dialog.dart';
+import 'form_alat_dialog.dart';
 
 const String roboto = 'Roboto';
 
@@ -114,18 +117,38 @@ class _AlatCardState extends State<AlatCard> {
                     Icons.visibility,
                     const Color.fromRGBO(236, 254, 248, 1),
                     iconColor: const Color.fromRGBO(93, 93, 93, 1),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => DetailAlatPage()),
+                      );
+                    },
                   ),
+
                   const SizedBox(width: 6),
                   _iconBtn(
                     Icons.edit,
                     const Color.fromRGBO(236, 254, 248, 1),
                     iconColor: const Color.fromRGBO(93, 93, 93, 1),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) =>
+                            FormAlatDialog(isEdit: true, alat: widget.alat),
+                      );
+                    },
                   ),
                   const SizedBox(width: 6),
                   _iconBtn(
                     Icons.delete,
                     const Color.fromRGBO(255, 119, 119, 0.22),
                     iconColor: const Color.fromRGBO(255, 2, 2, 1),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => const DeleteAlatDialog(),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -136,14 +159,23 @@ class _AlatCardState extends State<AlatCard> {
     );
   }
 
-  Widget _iconBtn(IconData icon, Color bg, {Color iconColor = Colors.black}) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
+  Widget _iconBtn(
+    IconData icon,
+    Color bg, {
+    Color iconColor = Colors.black,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 16, color: iconColor),
       ),
-      child: Icon(icon, size: 16, color: iconColor),
     );
   }
 }

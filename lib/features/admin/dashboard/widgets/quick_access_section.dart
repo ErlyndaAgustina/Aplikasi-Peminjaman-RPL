@@ -1,11 +1,64 @@
 import 'package:flutter/material.dart';
+import '../../alat/manajemen_alat_page.dart';
+import '../../kategori/manajemen_kategori_page.dart';
+import '../../log_aktivitas/log_aktivitas_page.dart';
+import '../../peminjaman/manajemen_peminjaman_page.dart';
+import '../../pengembalian/pengembalian_page.dart';
+import '../../users/manajemen_pengguna_page.dart';
 import 'quick_access_item.dart';
 
 class QuickAccessSection extends StatelessWidget {
   const QuickAccessSection({super.key});
 
+  // Pindahkan definisi font ke level class agar bisa diakses di mana saja
+  static const String roboto = 'Roboto';
+
   @override
   Widget build(BuildContext context) {
+    // Definisi data item di dalam build agar Navigator context bisa digunakan
+    final List<QuickAccessItem> items = [
+      QuickAccessItem(
+        title: 'Kelola Pengguna',
+        icon: Icons.people,
+        color: const Color.fromRGBO(99, 36, 235, 1),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const ManajemenPenggunaPage()));
+        },
+      ),
+      QuickAccessItem(
+        title: 'Kelola Alat',
+        icon: Icons.inventory,
+        color:  Color.fromRGBO(0, 169, 112, 1),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const ManajemenAlatPage()));
+        },
+      ),
+      QuickAccessItem(
+        title: 'Kelola Kategori',
+        icon: Icons.category,
+        color:  Color.fromRGBO(43, 127, 255, 1),
+        onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => const ManajemenKategoriPage()));},
+      ),
+      QuickAccessItem(
+        title: 'Kelola Peminjaman',
+        icon: Icons.assignment,
+        color:  Color.fromRGBO(254, 154, 0, 1),
+        onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => const ManajemenPeminjamanPage()));},
+      ),
+      QuickAccessItem(
+        title: 'Kelola Pengembalian',
+        icon: Icons.assignment_return,
+        color: const Color.fromRGBO(173, 70, 255, 1),
+        onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => const PengembalianPage()));},
+      ),
+      QuickAccessItem(
+        title: 'Log Aktivitas',
+        icon: Icons.show_chart,
+        color:  Color.fromRGBO(246, 51, 154, 1),
+        onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => const LogAktivitasPage()));},
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -20,7 +73,7 @@ class QuickAccessSection extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         const Text(
-          'Akses cepat ke modul CRUD',
+          'Akses cepat ke manajemen pengelolaan',
           style: TextStyle(
             fontFamily: roboto,
             fontSize: 13,
@@ -35,7 +88,7 @@ class QuickAccessSection extends StatelessWidget {
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: 6,
+              itemCount: items.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: isMobile ? 2 : 3,
                 mainAxisSpacing: 12,
@@ -43,39 +96,6 @@ class QuickAccessSection extends StatelessWidget {
                 childAspectRatio: 2.8,
               ),
               itemBuilder: (context, index) {
-                const items = [
-                  QuickAccessItem(
-                    'Kelola Pengguna',
-                    Icons.people,
-                    Color.fromRGBO(99, 36, 235, 1),
-                  ),
-                  QuickAccessItem(
-                    'Kelola Alat',
-                    Icons.inventory,
-                    Color.fromRGBO(0, 169, 112, 1),
-                  ),
-                  QuickAccessItem(
-                    'Kelola Kategori',
-                    Icons.category,
-                    Color.fromRGBO(43, 127, 255, 1),
-                  ),
-                  QuickAccessItem(
-                    'Kelola Peminjaman',
-                    Icons.assignment,
-                    Color.fromRGBO(254, 154, 0, 1),
-                  ),
-                  QuickAccessItem(
-                    'Kelola Pengembalian',
-                    Icons.assignment_return,
-                    Color.fromRGBO(173, 70, 255, 1),
-                  ),
-                  QuickAccessItem(
-                    'Log Aktivitas',
-                    Icons.show_chart,
-                    Color.fromRGBO(246, 51, 154, 1),
-                  ),
-                ];
-
                 return items[index];
               },
             );

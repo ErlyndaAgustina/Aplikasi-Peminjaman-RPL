@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../profile/profile_page.dart';
 import '../detail_alat/widgets/alat_header_card.dart';
 import '../detail_alat/widgets/models.dart';
 import '../detail_alat/widgets/unit_alat_card.dart';
+import 'widgets/form_unit_dialog.dart';
 
 const String roboto = 'Roboto';
 
@@ -13,6 +15,31 @@ class DetailAlatPage extends StatefulWidget {
 }
 
 class _DetailAlatPageState extends State<DetailAlatPage> {
+  // 1. Tambahkan variabel untuk menyimpan input pencarian
+  String searchQuery = '';
+
+  // 2. Buat getter untuk memfilter list unit berdasarkan pencarian
+  List<UnitAlatModel> get filteredUnitAlat {
+    // Jika kolom pencarian kosong, tampilkan semua
+    if (searchQuery.isEmpty) {
+      return unitAlatList;
+    }
+
+    return unitAlatList.where((unit) {
+      // Kita filter berdasarkan properti yang ada di model kamu:
+      // Pastikan nama variabel (kodeUnit, kondisi, status) sesuai dengan di models.dart
+      final String kode = (unit.kodeUnit ?? "").toLowerCase();
+      final String kondisi = (unit.kondisi ?? "").toLowerCase();
+      final String status = (unit.status ?? "").toLowerCase();
+      final String query = searchQuery.toLowerCase();
+
+      // User bisa cari berdasarkan kode, kondisi (Misal: "Baik"), atau status (Misal: "Tersedia")
+      return kode.contains(query) ||
+          kondisi.contains(query) ||
+          status.contains(query);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,15 +61,20 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
             bottom: false,
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(217, 253, 240, 0.49),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(217, 253, 240, 0.49),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -72,12 +104,23 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                     ],
                   ),
                 ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -98,7 +141,12 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: () {},
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const FormUnitDialog(isEdit: false),
+                );
+              },
               icon: const Icon(Icons.add, color: Colors.white, size: 22),
               label: const Text(
                 'Tambah Unit',
@@ -132,9 +180,10 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                     color: const Color.fromRGBO(62, 159, 127, 1), // hijau muda
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  child: const Text(
-                    '12 Tersedia',
-                    style: TextStyle(
+                  child: Text(
+                    // Update jumlah tersedia secara dinamis
+                    '${filteredUnitAlat.length} Tersedia',
+                    style: const TextStyle(
                       fontFamily: roboto,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -148,6 +197,11 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
             SizedBox(
               height: 40,
               child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
                 style: const TextStyle(
                   fontFamily: roboto,
                   fontSize: 15,
@@ -155,7 +209,7 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                   color: Color.fromRGBO(72, 141, 117, 1),
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Cari unit atau kode unit alat...',
+                  hintText: 'Cari kode unit alat atau kondisi...',
                   hintStyle: const TextStyle(
                     fontFamily: roboto,
                     fontSize: 15,
@@ -196,14 +250,32 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
             ),
             const SizedBox(height: 14),
 
-             ListView.builder(
-                itemCount: unitAlatList.length,
-                itemBuilder: (context, index) {
-                  final unitAlat = unitAlatList[index];
-                  return UnitAlatCard(unit: unitAlat);
-                },
-              ),
-            
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filteredUnitAlat.length, // Gunakan list hasil filter
+              itemBuilder: (context, index) {
+                final unitAlat = filteredUnitAlat[index];
+                return UnitAlatCard(unit: unitAlat);
+              },
+            ),
+            // Di dalam Column body:
+            filteredUnitAlat.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text(
+                      "Unit tidak ditemukan...",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredUnitAlat.length,
+                    itemBuilder: (context, index) {
+                      return UnitAlatCard(unit: filteredUnitAlat[index]);
+                    },
+                  ),
           ],
         ),
       ),

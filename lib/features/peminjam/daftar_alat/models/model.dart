@@ -12,12 +12,14 @@ class AlatModel {
   });
 }
 
+List<AlatModel> keranjangAlat = [];
 final List<AlatModel> alatListDummy = [
   AlatModel(
     nama: 'Macbook Pro',
     kode: 'LPT-001',
     kategori: 'Perangkat Komputasi',
     jumlah: 12,
+
   ),
   AlatModel(
     nama: 'Arduino',

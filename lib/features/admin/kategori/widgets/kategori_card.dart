@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import '../widgets/models.dart';
+import '../models/models.dart';
 
 const String roboto = 'Roboto';
 
-class KategoriCard extends StatefulWidget {
+class KategoriCard extends StatelessWidget {
   final KategoriModel kategori;
+  final VoidCallback onEdit; // Tambahkan ini
+  final VoidCallback onDelete;
 
-  const KategoriCard({super.key, required this.kategori});
+  const KategoriCard({
+    super.key,
+    required this.kategori,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
-  @override
-  State<KategoriCard> createState() => _KategoriCardState();
-}
-
-class _KategoriCardState extends State<KategoriCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -27,7 +29,7 @@ class _KategoriCardState extends State<KategoriCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.kategori.nama,
+            kategori.nama,
             style: const TextStyle(
               fontFamily: roboto,
               fontWeight: FontWeight.w800,
@@ -37,7 +39,7 @@ class _KategoriCardState extends State<KategoriCard> {
           ),
           const SizedBox(height: 2),
           Text(
-            widget.kategori.deskripsi,
+            kategori.deskripsi,
             style: const TextStyle(
               fontFamily: roboto,
               fontSize: 14,
@@ -54,7 +56,7 @@ class _KategoriCardState extends State<KategoriCard> {
               ),
               const SizedBox(width: 6),
               Text(
-                '${widget.kategori.totalAlat} Alat Tersedia',
+                '${kategori.totalAlat} Alat Tersedia',
                 style: const TextStyle(
                   fontFamily: roboto,
                   fontSize: 12,
@@ -69,7 +71,7 @@ class _KategoriCardState extends State<KategoriCard> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: onEdit, // UBAH DI SINI: panggil onEdit
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
                       color: Color.fromRGBO(72, 141, 117, 1),
@@ -97,7 +99,7 @@ class _KategoriCardState extends State<KategoriCard> {
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: onDelete, // UBAH DI SINI: panggil onDelete
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
                       color: Color.fromRGBO(255, 2, 2, 1),

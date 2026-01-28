@@ -1,11 +1,45 @@
 import 'package:flutter/material.dart';
+import '../../profile/profile_page.dart';
 import '../peminjaman/widgets/filter.dart';
-import '../peminjaman/widgets/models.dart';
+import 'models/models.dart';
 import '../peminjaman/widgets/peminjaman_card.dart';
 import '../sidebar/sidebar_admin.dart';
 
-class ManajemenPeminjamanPage extends StatelessWidget {
+const String roboto = 'Roboto';
+
+class ManajemenPeminjamanPage extends StatefulWidget {
   const ManajemenPeminjamanPage({super.key});
+
+  @override
+  State<ManajemenPeminjamanPage> createState() => _ManajemenPeminjamanPageState();
+}
+
+class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
+  // 1. Inisialisasi variabel state
+  List<PeminjamanModel> filteredList = [];
+  String searchQuery = "";
+  String filterStatus = "Semua Status";
+
+  @override
+  void initState() {
+    super.initState();
+    // Isi list pertama kali dengan semua data
+    filteredList = peminjamanList;
+  }
+
+  // 2. Fungsi Logika Filter & Search
+  void _applyFilter() {
+    setState(() {
+      filteredList = peminjamanList.where((p) {
+        final matchesSearch = p.nama.toLowerCase().contains(searchQuery.toLowerCase()) || 
+                              p.kode.toLowerCase().contains(searchQuery.toLowerCase());
+        
+        final matchesFilter = (filterStatus == "Semua Status") || (p.status == filterStatus);
+        
+        return matchesSearch && matchesFilter;
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,12 +103,23 @@ class ManajemenPeminjamanPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -86,9 +131,14 @@ class ManajemenPeminjamanPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // SEARCH BAR
             SizedBox(
               height: 40,
               child: TextField(
+                onChanged: (value) {
+                  searchQuery = value;
+                  _applyFilter(); // Memanggil fungsi filter saat ngetik
+                },
                 style: const TextStyle(
                   fontFamily: roboto,
                   fontSize: 15,
@@ -110,40 +160,45 @@ class ManajemenPeminjamanPage extends StatelessWidget {
                   ),
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: Color.fromRGBO(205, 238, 226, 1),
-                      width: 1.2,
-                    ),
+                    borderSide: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1), width: 1.2),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: Color.fromRGBO(72, 141, 117, 1),
-                      width: 1.5,
-                    ),
+                    borderSide: const BorderSide(color: Color.fromRGBO(72, 141, 117, 1), width: 1.5),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 8,
-                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
             const SizedBox(height: 10),
-            const KategoriFilter(),
+
+            // KATEGORI FILTER (Sudah diperbaiki panggilannya)
+            KategoriFilter(
+              onStatusChanged: (status) {
+                filterStatus = status;
+                _applyFilter(); // Memanggil fungsi filter saat status dipilih
+              },
+            ),
+
             const SizedBox(height: 16),
+
+            // LISTVIEW (Sudah ganti ke .length)
             Expanded(
-              child: ListView(
-                children: [
-                  ...peminjamanList.map((p) => PeminjamanCard(data: p))
-                ],
-              ),
+              child: filteredList.isEmpty 
+                ? const Center(
+                    child: Text(
+                      "Data tidak ditemukan",
+                      style: TextStyle(fontFamily: roboto, color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: filteredList.length, // PAKAI .length YA KECILLLL
+                    itemBuilder: (context, index) {
+                      return PeminjamanCard(data: filteredList[index]);
+                    },
+                  ),
             )
           ],
         ),

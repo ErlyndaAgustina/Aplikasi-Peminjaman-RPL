@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'models.dart';
+import 'hapus_unit_dialog.dart';
+import '../models/models.dart';
 
 const String roboto = 'Roboto';
 
 class UnitDipinjamCard extends StatelessWidget {
   final UnitDipinjamModel unit;
 
-  const UnitDipinjamCard({
-    super.key,
-    required this.unit,
-  });
+  const UnitDipinjamCard({super.key, required this.unit});
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +17,7 @@ class UnitDipinjamCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color.fromRGBO(205, 238, 226, 1),
-        ),
+        border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,8 +37,10 @@ class UnitDipinjamCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color.fromRGBO(255, 237, 213, 1),
                   borderRadius: BorderRadius.circular(12),
@@ -105,6 +103,14 @@ class UnitDipinjamCard extends StatelessWidget {
                     Icons.delete,
                     const Color.fromRGBO(255, 119, 119, 0.22),
                     iconColor: const Color.fromRGBO(255, 2, 2, 1),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => const HapusUnitDialog(
+                          title: "Detail Alat",
+                        ), // Sesuaikan title-nya
+                      );
+                    },
                   ),
                 ],
               ),
@@ -114,14 +120,22 @@ class UnitDipinjamCard extends StatelessWidget {
       ),
     );
   }
-  Widget _iconBtn(IconData icon, Color bg, {Color iconColor = Colors.black}) {
-    return Container(
-      padding: const EdgeInsets.all(10),
+
+  Widget _iconBtn(IconData icon, Color bgColor, {Color? iconColor, VoidCallback? onTap}) { // Tambahkan parameter onTap
+  return GestureDetector( // Bungkus dengan GestureDetector
+    onTap: onTap, // Pasang di sini
+    child: Container(
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Icon(icon, size: 16, color: iconColor),
-    );
-  }
+      child: Icon(
+        icon,
+        color: iconColor ?? Colors.black,
+        size: 20,
+      ),
+    ),
+  );
+}
 }

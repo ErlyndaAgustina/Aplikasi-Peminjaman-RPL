@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 
 const String roboto = 'Roboto';
 
-class KategoriFilter extends StatefulWidget {
-  const KategoriFilter({super.key});
+class KategoriFilter extends StatelessWidget {
+  // Gunakan Function(String) agar jelas menerima data teks
+  final String selectedKategori;
+  final Function(String) onKategoriChanged;
 
-  @override
-  State<KategoriFilter> createState() => _KategoriFilterState();
-}
+  const KategoriFilter({
+    super.key,
+    required this.selectedKategori,
+    required this.onKategoriChanged,
+  });
 
-class _KategoriFilterState extends State<KategoriFilter> {
-  String selectedKategori = 'Semua Status';
-
-  final List<String> kategoriList = [
+  final List<String> kategoriList = const [
     'Semua Status',
     'Perangkat Jaringan',
     'Perangkat Komputasi',
@@ -22,18 +23,12 @@ class _KategoriFilterState extends State<KategoriFilter> {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
-      onSelected: (value) {
-        setState(() {
-          selectedKategori = value;
-        });
-      },
+      onSelected: (value) => onKategoriChanged(value),
       offset: const Offset(0, 50),
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(
-          color: Color.fromRGBO(205, 238, 226, 1),
-        ),
+        side: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1)),
       ),
       itemBuilder: (context) {
         return kategoriList.map((kategori) {
@@ -57,17 +52,11 @@ class _KategoriFilterState extends State<KategoriFilter> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: const Color.fromRGBO(205, 238, 226, 1),
-          ),
+          border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.filter_alt_outlined,
-              size: 18,
-              color: Color.fromRGBO(62, 159, 127, 1),
-            ),
+            const Icon(Icons.filter_alt_outlined, size: 18, color: Color.fromRGBO(62, 159, 127, 1)),
             const SizedBox(width: 8),
             Text(
               selectedKategori,
@@ -79,10 +68,7 @@ class _KategoriFilterState extends State<KategoriFilter> {
               ),
             ),
             const Spacer(),
-            const Icon(
-              Icons.keyboard_arrow_down,
-              color: Color.fromRGBO(62, 159, 127, 1),
-            ),
+            const Icon(Icons.keyboard_arrow_down, color: Color.fromRGBO(62, 159, 127, 1)),
           ],
         ),
       ),

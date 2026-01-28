@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../profile/profile_page.dart';
+import '../daftar_alat/models/model.dart';
 import 'models/model.dart';
 import 'widgets/form_widgets.dart';
-import 'package:intl/intl.dart';
+import 'widgets/info_alat_card.dart';
+import 'widgets/form_peminjaman_card.dart';
 
 class AjukanPeminjamanPage extends StatefulWidget {
   const AjukanPeminjamanPage({super.key});
@@ -12,11 +16,13 @@ class AjukanPeminjamanPage extends StatefulWidget {
 
 class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
   static const String roboto = 'Roboto';
-  
-  final TextEditingController _tanggalPinjamController = TextEditingController();
+
+  final TextEditingController _tanggalPinjamController =
+      TextEditingController();
   final TextEditingController _batasKembaliController = TextEditingController();
-  final TextEditingController _batasKembaliOtomatisController = TextEditingController();
-  
+  final TextEditingController _batasKembaliOtomatisController =
+      TextEditingController();
+
   DateTime? _tanggalPinjam;
   DateTime? _batasKembali;
   String? _jamPelajaranAwal;
@@ -45,7 +51,6 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
 
   void _hitungBatasKembaliOtomatis() {
     if (_batasKembali != null && _jamPelajaranAkhir != null) {
-      // Format batas kembali otomatis
       String tanggal = DateFormat('dd MMMM yyyy').format(_batasKembali!);
       setState(() {
         _batasKembaliOtomatisController.text = '$tanggal - $_jamPelajaranAkhir';
@@ -115,14 +120,9 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
                 return ListTile(
                   title: Text(
                     _jamPelajaranList[index],
-                    style: const TextStyle(
-                      fontFamily: roboto,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(fontFamily: roboto, fontSize: 14),
                   ),
-                  onTap: () {
-                    Navigator.pop(context, _jamPelajaranList[index]);
-                  },
+                  onTap: () => Navigator.pop(context, _jamPelajaranList[index]),
                 );
               },
             ),
@@ -147,77 +147,7 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(64),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              bottom: BorderSide(
-                color: Color.fromRGBO(216, 199, 246, 1),
-                width: 1,
-              ),
-            ),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(217, 253, 240, 0.49),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Color.fromRGBO(62, 159, 127, 1),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Daftar Alat',
-                        style: TextStyle(
-                          fontFamily: roboto,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color.fromRGBO(49, 47, 52, 1),
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'RPLKIT • SMK Brantas Karangkates',
-                        style: TextStyle(
-                          fontFamily: roboto,
-                          fontSize: 12,
-                          color: Color.fromRGBO(72, 141, 117, 1),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(62, 159, 127, 1),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -232,7 +162,12 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
               ),
             ),
             const SizedBox(height: 6),
-            _buildInfoCard(),
+            InfoAlatCard(
+              onRemove: (alat) => setState(() {
+                keranjangAlat.remove(alat);
+                if (keranjangAlat.isEmpty) Navigator.pop(context);
+              }),
+            ),
             const SizedBox(height: 24),
             const Text(
               'Form Peminjaman',
@@ -243,7 +178,15 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
               ),
             ),
             const SizedBox(height: 6),
-            _buildFormCard(),
+            FormPeminjamanCard(
+              tanggalPinjamController: _tanggalPinjamController,
+              batasKembaliController: _batasKembaliController,
+              batasKembaliOtomatisController: _batasKembaliOtomatisController,
+              jamPelajaranAwal: _jamPelajaranAwal,
+              jamPelajaranAkhir: _jamPelajaranAkhir,
+              onPilihTanggal: (isPinjam) => _pilihTanggal(context, isPinjam),
+              onPilihJam: (isAwal) => _pilihJamPelajaran(isAwal),
+            ),
             const SizedBox(height: 15),
             _buildWarningBanner(),
             const SizedBox(height: 24),
@@ -254,94 +197,85 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
     );
   }
 
-  Widget _buildInfoCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            alatTerpilih.nama,
-            style: const TextStyle(
-              fontFamily: roboto,
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
-              color: Color.fromRGBO(49, 47, 52, 1),
+  PreferredSize _buildAppBar(BuildContext context) {
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(64),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            bottom: BorderSide(
+              color: Color.fromRGBO(216, 199, 246, 1),
+              width: 1,
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            'Unit: ${alatTerpilih.unitKode}',
-            style: const TextStyle(
-              fontFamily: roboto,
-              fontSize: 14,
-              color: Color.fromRGBO(72, 141, 117, 1),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFormCard() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
-      ),
-      child: Column(
-        children: [
-          Row(
+        ),
+        child: SafeArea(
+          child: Row(
             children: [
-              Expanded(
-                child: BuildTextField(
-                  label: 'Tanggal Pinjam',
-                  hint: 'dd/mm/yyyy',
-                  icon: Icons.calendar_today_outlined,
-                  isDate: true,
-                  controller: _tanggalPinjamController,
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(217, 253, 240, 0.49),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Color.fromRGBO(62, 159, 127, 1),
+                  ),
                 ),
               ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: BuildTextField(
-                  label: 'Batas Kembali',
-                  hint: 'dd/mm/yyyy',
-                  icon: Icons.calendar_today_outlined,
-                  isDate: true,
-                  controller: _batasKembaliController,
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ajukan Peminjaman',
+                      style: TextStyle(
+                        fontFamily: roboto,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color.fromRGBO(49, 47, 52, 1),
+                      ),
+                    ),
+                    Text(
+                      'RPLKIT • SMK Brantas Karangkates',
+                      style: TextStyle(
+                        fontFamily: roboto,
+                        fontSize: 12,
+                        color: Color.fromRGBO(72, 141, 117, 1),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 16),
-          BuildDropdownField(
-            label: 'Jam Pelajaran',
-            hint: _jamPelajaranAwal ?? 'Pilih jam pelajaran',
-            onTap: () => _pilihJamPelajaran(true),
-          ),
-          const SizedBox(height: 16),
-          BuildDropdownField(
-            label: 'Sampai Jam Pelajaran',
-            hint: _jamPelajaranAkhir ?? 'Pilih jam pelajaran',
-            onTap: () => _pilihJamPelajaran(false),
-          ),
-          const SizedBox(height: 16),
-          BuildTextField(
-            label: 'Batas Kembali',
-            hint: '-',
-            isReadOnly: true,
-            controller: _batasKembaliOtomatisController,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -372,9 +306,10 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
       height: 40,
       child: ElevatedButton(
         onPressed: () {
-          // Validasi form
-          if (_tanggalPinjam == null || _batasKembali == null || 
-              _jamPelajaranAwal == null || _jamPelajaranAkhir == null) {
+          if (_tanggalPinjam == null ||
+              _batasKembali == null ||
+              _jamPelajaranAwal == null ||
+              _jamPelajaranAkhir == null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Mohon lengkapi semua field'),
@@ -383,14 +318,15 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
             );
             return;
           }
-          
-          // Proses submit
+          setState(() {
+            keranjangAlat.clear();
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Permintaan peminjaman berhasil dikirim'),
-              backgroundColor: Color.fromRGBO(62, 159, 127, 1),
             ),
           );
+          Navigator.pop(context);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color.fromRGBO(62, 159, 127, 1),

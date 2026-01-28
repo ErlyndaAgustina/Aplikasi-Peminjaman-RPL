@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../profile/profile_page.dart';
 import '../dashboard/widgets/summary_section.dart';
 import '../dashboard/widgets/quick_access_section.dart';
 import '../sidebar/sidebar_admin.dart';
@@ -39,7 +40,10 @@ class DashboardAdminPage extends StatelessWidget {
                   child: Builder(
                     builder: (context) => GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
-                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                      child: Icon(
+                        Icons.menu,
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
                     ),
                   ),
                 ),
@@ -55,7 +59,7 @@ class DashboardAdminPage extends StatelessWidget {
                           fontFamily: roboto,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color.fromRGBO(49, 47, 52, 1)
+                          color: Color.fromRGBO(49, 47, 52, 1),
                         ),
                       ),
                       SizedBox(height: 2),
@@ -70,10 +74,24 @@ class DashboardAdminPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(Icons.person, color: Color.fromRGBO(62, 159, 127, 1)),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
+                  ),
                 ),
               ],
             ),

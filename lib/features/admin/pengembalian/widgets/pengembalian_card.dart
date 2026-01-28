@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/model.dart';
+import 'detail_pengembalian_dialog.dart';
+import 'edit_pengembalian_dialog.dart';
+import 'hapus_pengembalian_dialog.dart';
 import 'status_badge.dart';
 
 const String roboto = 'Roboto';
@@ -152,12 +155,28 @@ class _PengembalianCardState extends State<PengembalianCard> {
                         Icons.visibility,
                         const Color.fromRGBO(236, 254, 248, 1),
                         iconColor: const Color.fromRGBO(93, 93, 93, 1),
+                        onTap: () {
+  showDialog(context: context, builder: (_) => DetailPengembalianDialog(data: widget.data));
+}
+                      
+                      ),
+                      const SizedBox(width: 6),
+                       _iconButton(
+                        Icons.edit,
+                        const Color.fromRGBO(236, 254, 248, 1),
+                        iconColor: const Color.fromRGBO(93, 93, 93, 1),
+                        onTap: () {
+  showDialog(context: context, builder: (_) => EditPengembalianDialog(data: widget.data));
+}
                       ),
                       const SizedBox(width: 6),
                       _iconButton(
                         Icons.delete,
                         const Color.fromRGBO(255, 119, 119, 0.22),
                         iconColor: const Color.fromRGBO(255, 2, 2, 1),
+                        onTap: () {
+  showDialog(context: context, builder: (_) => const HapusPengembalianDialog());
+}
                       ),
                     ],
                   ),
@@ -174,14 +193,19 @@ class _PengembalianCardState extends State<PengembalianCard> {
     IconData icon,
     Color bg, {
     Color iconColor = Colors.black,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 16, color: iconColor),
       ),
-      child: Icon(icon, size: 16, color: iconColor),
     );
   }
 }

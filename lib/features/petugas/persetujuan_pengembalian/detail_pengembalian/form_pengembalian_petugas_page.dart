@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../profile/profile_page.dart';
 import 'models/model.dart';
 import 'widgets/peminjam_info_card.dart';
 import 'widgets/auto_calculated_box.dart';
@@ -128,51 +129,88 @@ class DetailPengembalianPage extends StatelessWidget {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return PreferredSize(
-      preferredSize: const Size.fromHeight(64),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            bottom: BorderSide(
-              color: Color.fromRGBO(216, 199, 246, 1),
-              width: 1,
+        preferredSize: const Size.fromHeight(64),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: Color.fromRGBO(216, 199, 246, 1),
+                width: 1,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(217, 253, 240, 0.49),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Detail Pengembalian Alat',
+                        style: TextStyle(
+                          fontFamily: roboto,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color.fromRGBO(49, 47, 52, 1),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'RPLKIT • SMK Brantas Karangkates',
+                        style: TextStyle(
+                          fontFamily: roboto,
+                          fontSize: 12,
+                          color: Color.fromRGBO(72, 141, 117, 1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(217, 253, 240, 0.49),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Color.fromRGBO(62, 159, 127, 1),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Detail Pengembalian',
-                  style: TextStyle(
-                    fontFamily: roboto,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color.fromRGBO(49, 47, 52, 1),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+      );
   }
 }

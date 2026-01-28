@@ -192,7 +192,7 @@ class _SidebarPetugasDrawerState extends State<SidebarPetugasDrawer> {
                   ),
                   _buildMenuItem(
                     icon: Icons.picture_as_pdf_outlined,
-                    title: 'Log Aktivitas',
+                    title: 'Cetak Laporan',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushReplacement(

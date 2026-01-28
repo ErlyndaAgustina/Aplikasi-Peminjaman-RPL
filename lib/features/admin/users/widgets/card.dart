@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
-import 'model.dart';
+import '../models/model.dart';
 import 'role_badge.dart';
 
 class UserCard extends StatelessWidget {
   final UserModel user;
+  final Function(UserModel) onEdit;
+  final Function(UserModel) onDelete;
 
-  const UserCard({super.key, required this.user});
+  const UserCard({
+    super.key,
+    required this.user,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +74,7 @@ class UserCard extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => onEdit(user),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
                       color: Color.fromRGBO(72, 141, 117, 1), // hijau
@@ -95,7 +102,7 @@ class UserCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _showDeleteConfirmation(context),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
                       color: Color.fromRGBO(255, 2, 2, 1), // merah
@@ -105,8 +112,11 @@ class UserCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-                  icon: const Icon(Icons.delete, size: 16,
-                    color: Color.fromRGBO(255, 2, 2, 1)),
+                  icon: const Icon(
+                    Icons.delete,
+                    size: 16,
+                    color: Color.fromRGBO(255, 2, 2, 1),
+                  ),
                   label: const Text(
                     'Hapus',
                     style: TextStyle(
@@ -123,4 +133,71 @@ class UserCard extends StatelessWidget {
       ),
     );
   }
+  // Di dalam class UserCard
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.delete_outline, color: Colors.red, size: 60),
+            const SizedBox(height: 16),
+            const Text(
+              "Apakah yakin ingin menghapus Pengguna?",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                fontFamily: roboto,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      "Batal",
+                      style: TextStyle(color: Color.fromRGBO(62, 159, 127, 1)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      "Hapus",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Hubungkan ke tombol di Row:
+  // onPressed: () => _showDeleteConfirmation(context), // Tombol Hapus
 }

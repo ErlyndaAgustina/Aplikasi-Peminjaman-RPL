@@ -78,7 +78,7 @@ class UnitPinjamanModel {
 final dummyDetailPeminjaman = DetailPeminjamanModel(
   nama: 'Budi Santoso',
   kode: 'PJM-20260114-dcb',
-  status: StatusPeminjaman.disetujui, // ← coba ganti
+  status: StatusPeminjaman.disetujui,
   tanggalPinjam: '2 Januari 2026',
   jamPelajaran: '2 - 3',
   batasKembali: '2 Januari 2026, 09.00',

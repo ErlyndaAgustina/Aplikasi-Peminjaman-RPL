@@ -20,6 +20,7 @@ class _FilterCardState extends State<FilterCard> {
 
   final TextEditingController startDateController = TextEditingController();
   final TextEditingController endDateController = TextEditingController();
+  late final Function(String jenis, String mulai, String akhir, String kat, String stat)? onFilterChanged;
 
   Future<void> _pickDate(
     BuildContext context,

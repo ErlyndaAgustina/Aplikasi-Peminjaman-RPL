@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'delete_confirm_dialog.dart';
+import 'form_unit_dialog.dart';
 import 'models.dart';
 import 'status_badge.dart';
 
@@ -17,7 +19,7 @@ class UnitAlatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color.fromRGBO(205, 238, 226, 1))
+        border: Border.all(color: Color.fromRGBO(205, 238, 226, 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,10 +29,12 @@ class UnitAlatCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Unit ${unit.kodeUnit}',
-                  style: const TextStyle(fontFamily: roboto,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                        color: Color.fromRGBO(49, 47, 52, 1)),
+                  style: const TextStyle(
+                    fontFamily: roboto,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                    color: Color.fromRGBO(49, 47, 52, 1),
+                  ),
                 ),
               ),
               StatusBadge(status: unit.status),
@@ -39,16 +43,25 @@ class UnitAlatCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Kondisi: ${unit.kondisi}',
-            style: const TextStyle(fontFamily: roboto,
-                        fontSize: 12,
-                        color: Color.fromRGBO(72, 141, 117, 1), fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              fontFamily: roboto,
+              fontSize: 12,
+              color: Color.fromRGBO(72, 141, 117, 1),
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) =>
+                          FormUnitDialog(isEdit: true, unit: unit),
+                    );
+                  },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
                       color: Color.fromRGBO(72, 141, 117, 1), // hijau
@@ -76,7 +89,12 @@ class UnitAlatCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const DeleteConfirmDialog(),
+                    );
+                  },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
                       color: Color.fromRGBO(255, 2, 2, 1), // merah
@@ -86,8 +104,11 @@ class UnitAlatCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-                  icon: const Icon(Icons.delete, size: 16,
-                    color: Color.fromRGBO(255, 2, 2, 1)),
+                  icon: const Icon(
+                    Icons.delete,
+                    size: 16,
+                    color: Color.fromRGBO(255, 2, 2, 1),
+                  ),
                   label: const Text(
                     'Hapus',
                     style: TextStyle(

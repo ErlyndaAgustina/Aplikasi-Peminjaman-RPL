@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../profile/profile_page.dart';
 import 'models/model.dart';
 import 'widgets/header_card.dart';
 import 'widgets/info_peminjaman_card.dart';
@@ -77,12 +78,23 @@ class DetailPeminjamanPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
                   ),
                 ),
               ],

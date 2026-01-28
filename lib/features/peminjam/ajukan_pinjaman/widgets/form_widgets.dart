@@ -22,7 +22,7 @@ class BuildTextField extends StatelessWidget {
     this.icon,
     this.isReadOnly = false,
     this.isDate = false,
-    this.controller,
+    this.controller, required Function() onTap,
   });
 
   @override

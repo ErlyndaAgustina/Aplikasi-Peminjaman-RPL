@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../admin/alat/widgets/alat_card.dart';
+import '../../profile/profile_page.dart';
 import '../alat/widgets/filter.dart';
-import '../alat/widgets/models.dart';
+import 'models/models.dart';
 import '../sidebar/sidebar_admin.dart';
+import 'widgets/form_alat_dialog.dart';
 
 const String roboto = 'Roboto';
 
@@ -10,11 +12,48 @@ class ManajemenAlatPage extends StatefulWidget {
   const ManajemenAlatPage({super.key});
 
   @override
-  State<ManajemenAlatPage> createState() =>
-      _ManajemenAlatPageState();
+  State<ManajemenAlatPage> createState() => _ManajemenAlatPageState();
 }
 
 class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
+  // State untuk menyimpan filter
+  String searchQuery = '';
+  String selectedKategori = 'Semua Status';
+
+  // Logika Filter Data
+  // Logika Filter Data yang Lebih Aman
+  List<AlatModel> get filteredAlat {
+    // Jika list utama null atau kosong, langsung kembalikan list kosong
+    if (alatList.isEmpty) return [];
+
+    return alatList.where((alat) {
+      // 1. Pastikan objek 'alat' itu sendiri tidak null
+      // ignore: unnecessary_null_comparison
+      if (alat == null) return false;
+
+      // 2. Ambil nilai dengan pengaman (?? "") untuk menghindari undefined
+      final String nama = (alat.nama ?? "").toString().toLowerCase();
+      final String kode = (alat.kode ?? "").toString().toLowerCase();
+      final String query = searchQuery.toLowerCase();
+
+      // 3. Cek pencarian
+      final bool matchesSearch = nama.contains(query) || kode.contains(query);
+
+      // 4. Cek kategori (Gunakan toLowerCase pada kedua sisi agar aman)
+      final String kategoriAlat = (alat.kategori ?? "")
+          .toString()
+          .toLowerCase()
+          .trim();
+      final String kategoriSelected = selectedKategori.toLowerCase().trim();
+
+      final bool matchesKategori =
+          selectedKategori == 'Semua Status' ||
+          kategoriAlat == kategoriSelected;
+
+      return matchesSearch && matchesKategori;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,7 +85,10 @@ class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
                   child: Builder(
                     builder: (context) => GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
-                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                      child: Icon(
+                        Icons.menu,
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
                     ),
                   ),
                 ),
@@ -77,12 +119,23 @@ class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
                     ],
                   ),
                 ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -102,12 +155,13 @@ class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: () {},
-              icon: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 22,
-              ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const FormAlatDialog(isEdit: false),
+                );
+              },
+              icon: const Icon(Icons.add, color: Colors.white, size: 22),
               label: const Text(
                 'Tambah Alat',
                 style: TextStyle(
@@ -122,6 +176,9 @@ class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
             SizedBox(
               height: 40,
               child: TextField(
+                onChanged: (value) {
+                  setState(() => searchQuery = value); // Update state pencarian
+                },
                 style: const TextStyle(
                   fontFamily: roboto,
                   fontSize: 15,
@@ -169,16 +226,23 @@ class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
               ),
             ),
             const SizedBox(height: 8),
-            const KategoriFilter(),
+            KategoriFilter(
+              onChanged: (value) {
+                setState(
+                  () => selectedKategori = value,
+                ); // Update state kategori
+              },
+            ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView.builder(
-                itemCount: alatList.length,
-                itemBuilder: (context, index) {
-                  final alat = alatList[index];
-                  return AlatCard(alat: alat);
-                },
-              ),
+              child: filteredAlat.isEmpty
+                  ? const Center(child: Text('Data tidak ditemukan'))
+                  : ListView.builder(
+                      itemCount: filteredAlat.length,
+                      itemBuilder: (context, index) {
+                        return AlatCard(alat: filteredAlat[index]);
+                      },
+                    ),
             ),
           ],
         ),

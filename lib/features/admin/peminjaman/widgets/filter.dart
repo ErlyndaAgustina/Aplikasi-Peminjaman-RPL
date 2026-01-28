@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 const String roboto = 'Roboto';
 
 class KategoriFilter extends StatefulWidget {
-  const KategoriFilter({super.key});
+  final Function(String) onStatusChanged;
+  const KategoriFilter({super.key, required this.onStatusChanged});
 
   @override
   State<KategoriFilter> createState() => _KategoriFilterState();
@@ -22,10 +23,11 @@ class _KategoriFilterState extends State<KategoriFilter> {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       onSelected: (value) {
-        setState(() {
-          selectedKategori = value;
-        });
-      },
+  setState(() {
+    selectedKategori = value;
+  });
+  widget.onStatusChanged(value); // Panggil callback-nya di sini
+},
       offset: const Offset(0, 50),
       color: Colors.white,
       shape: RoundedRectangleBorder(

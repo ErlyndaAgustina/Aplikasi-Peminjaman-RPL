@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../cetak_laporan/cetak_laporan_page.dart';
+import '../../persetujuan_peminjaman/persetujuan_peminjaman_page.dart';
+import '../../persetujuan_pengembalian/persetujuan_pengembalian_page.dart';
+
 const String roboto = 'Roboto';
 
 class QuickAccessSection extends StatelessWidget {
@@ -9,8 +13,8 @@ class QuickAccessSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        Text(
+      children: [
+        const Text(
           "Quick Access",
           style: TextStyle(
             fontFamily: roboto,
@@ -19,21 +23,39 @@ class QuickAccessSection extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         _QuickAccessButton(
           icon: Icons.swap_horiz,
           label: "Peminjaman",
           solid: true,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PersetujuanPeminjamanPage()), 
+            );
+          },
         ),
         _QuickAccessButton(
           icon: Icons.assignment_return_outlined,
           label: "Pengembalian",
           solid: false,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PersetujuanPengembalianPage()), 
+            );
+          },
         ),
         _QuickAccessButton(
           icon: Icons.receipt_long,
           label: "Laporan",
           solid: true,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CetakLaporanPage()), 
+            );
+          },
         ),
       ],
     );
@@ -44,11 +66,13 @@ class _QuickAccessButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool solid;
+  final VoidCallback onTap;
 
   const _QuickAccessButton({
     required this.icon,
     required this.label,
     required this.solid,
+    required this.onTap,
   });
 
   static const Color _green = Color.fromRGBO(62, 159, 127, 1);
@@ -77,15 +101,11 @@ class _QuickAccessButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
-          onTap: () {},
+          onTap: onTap,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: solid ? Colors.white : _green,
-              ),
+              Icon(icon, size: 18, color: solid ? Colors.white : _green),
               const SizedBox(width: 8),
               Text(
                 label,

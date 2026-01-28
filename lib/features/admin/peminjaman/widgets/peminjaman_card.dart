@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'models.dart';
+import '../detail_peminjaman/detail_peminjaman_page.dart';
+import 'edit_peminjaman_dialog.dart';
+import 'hapus_peminjaman_dialog.dart';
+import '../models/models.dart';
 import 'status_chip.dart';
-import 'filter.dart';
+
+const String roboto = 'Roboto';
 
 class PeminjamanCard extends StatefulWidget {
   final PeminjamanModel data;
@@ -99,18 +103,42 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
                 Icons.visibility,
                 const Color.fromRGBO(236, 254, 248, 1),
                 iconColor: const Color.fromRGBO(93, 93, 93, 1),
+                onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => DetailPeminjamanPage()),
+                      );
+                    },
               ),
               const SizedBox(width: 6),
               _iconBtn(
                 Icons.edit,
                 const Color.fromRGBO(236, 254, 248, 1),
                 iconColor: const Color.fromRGBO(93, 93, 93, 1),
+                onTap: () {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => EditPeminjamanDialog(data: widget.data),
+    );
+  }
               ),
               const SizedBox(width: 6),
               _iconBtn(
                 Icons.delete,
                 const Color.fromRGBO(255, 119, 119, 0.22),
                 iconColor: const Color.fromRGBO(255, 2, 2, 1),
+                onTap: () {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => HapusPeminjamanDialog(namaPeminjam: widget.data.nama),
+    ).then((confirmed) {
+       if(confirmed == true) {
+         // Jalankan fungsi hapus di sini kecillll
+       }
+    });
+  }
               ),
             ],
           ),
@@ -119,14 +147,23 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
     );
   }
 
-  Widget _iconBtn(IconData icon, Color bg, {Color iconColor = Colors.black}) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
+  Widget _iconBtn(
+    IconData icon,
+    Color bg, {
+    Color iconColor = Colors.black,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 16, color: iconColor),
       ),
-      child: Icon(icon, size: 16, color: iconColor),
     );
   }
 }

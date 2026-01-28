@@ -3,10 +3,20 @@ import '../models/model.dart';
 
 const String roboto = 'Roboto';
 
-class AlatCardPeminjam extends StatelessWidget {
+class AlatCardPeminjam extends StatefulWidget {
   final AlatModel alat;
-  const AlatCardPeminjam({super.key, required this.alat});
+  final VoidCallback onTambah;
+  const AlatCardPeminjam({
+    super.key,
+    required this.alat,
+    required this.onTambah,
+  });
 
+  @override
+  State<AlatCardPeminjam> createState() => _AlatCardPeminjamState();
+}
+
+class _AlatCardPeminjamState extends State<AlatCardPeminjam> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -29,7 +39,7 @@ class AlatCardPeminjam extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    alat.nama,
+                    widget.alat.nama,
                     style: const TextStyle(
                       fontFamily: roboto,
                       fontWeight: FontWeight.w800,
@@ -38,7 +48,7 @@ class AlatCardPeminjam extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Kode: ${alat.kode}',
+                    'Kode: ${widget.alat.kode}',
                     style: const TextStyle(
                       fontFamily: roboto,
                       fontSize: 14,
@@ -57,7 +67,7 @@ class AlatCardPeminjam extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${alat.jumlah} Unit',
+                    '${widget.alat.jumlah} Unit',
                     style: const TextStyle(
                       fontSize: 12,
                       fontFamily: roboto,
@@ -83,7 +93,7 @@ class AlatCardPeminjam extends StatelessWidget {
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Text(
-                    alat.kategori,
+                    widget.alat.kategori,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -103,24 +113,48 @@ class AlatCardPeminjam extends StatelessWidget {
                 child: SizedBox(
                   height: 30,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // Pastikan list keranjangAlat sudah dideklarasikan di model.dart
+                      if (!keranjangAlat.contains(widget.alat)) {
+                        keranjangAlat.add(widget.alat);
+                        widget.onTambah();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${widget.alat.nama} berhasil ditambah ke keranjang',
+                            ),
+                            duration: const Duration(seconds: 1),
+                            backgroundColor: const Color.fromRGBO(
+                              62,
+                              159,
+                              127,
+                              1,
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Alat sudah ada di keranjang'),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      }
+                    }, // <--- Pastikan ada koma di sini
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.zero,
                       backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                     ),
                     child: const Text(
                       'Pinjam',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: roboto,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
                         color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),

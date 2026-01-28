@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../profile/profile_page.dart';
 import '../cetak_laporan/widgets/filter_card.dart';
 import '../sidebar/sidebar_petugas.dart';
+import 'widgets/pdf_printing.dart';
 
 const String roboto = 'Roboto';
 
@@ -38,7 +40,10 @@ class CetakLaporanPage extends StatelessWidget {
                   child: Builder(
                     builder: (context) => GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
-                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                      child: Icon(
+                        Icons.menu,
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
                     ),
                   ),
                 ),
@@ -69,12 +74,23 @@ class CetakLaporanPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -103,7 +119,18 @@ class CetakLaporanPage extends StatelessWidget {
               width: double.infinity,
               height: 40,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  // Integrasikan dengan state management Anda (misal Provider/Bloc)
+                  // atau ambil dari controller yang sudah ada.
+
+                  PdfService.generateLaporan(
+                    jenis: "Peminjaman", // Ambil dari state FilterCard
+                    tglMulai: "01/01/2024",
+                    tglAkhir: "31/01/2024",
+                    kategori: "Semua",
+                    status: "Semua",
+                  );
+                },
                 icon: const Icon(Icons.print_outlined, color: Colors.white),
                 label: const Text(
                   "Cetak Laporan",

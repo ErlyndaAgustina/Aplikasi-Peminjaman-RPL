@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../profile/profile_page.dart';
 import '../detail_peminjaman/widgets/peminjaman_card.dart';
-import '../detail_peminjaman/widgets/models.dart';
+import 'models/models.dart';
 import '../detail_peminjaman/widgets/unit_dipinjam_card.dart';
+import 'widgets/tambah_unit.dart';
 
 const String roboto = 'Roboto';
 
@@ -29,15 +31,20 @@ class DetailPeminjamanPage extends StatelessWidget {
             bottom: false,
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(217, 253, 240, 0.49),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(217, 253, 240, 0.49),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -67,12 +74,23 @@ class DetailPeminjamanPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -83,33 +101,40 @@ class DetailPeminjamanPage extends StatelessWidget {
 
       // ================= BODY =================
       body: Padding(
-  padding: const EdgeInsets.all(16),
-  child: Column(
-    children: [
-      PeminjamanCard(data: detailPeminjamanDummy),
-      ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
-          minimumSize: const Size.fromHeight(44),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        onPressed: () {},
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Tambah Unit',
-          style: TextStyle(
-            fontFamily: roboto,
-            fontWeight: FontWeight.w700,
-            color: Colors.white
-          ),
-        ),
-      ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            PeminjamanCard(data: detailPeminjamanDummy),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
+                minimumSize: const Size.fromHeight(44),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () {
+  showDialog(
+    context: context,
+    // Ini kunci buat bikin background belakang jadi transparan gelap/abu-abu
+    barrierColor: Colors.black54, 
+    builder: (context) => const TambahUnitModal(),
+  );
+},
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Tambah Unit',
+                style: TextStyle(
+                  fontFamily: roboto,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
 
-      const SizedBox(height: 25),
+            const SizedBox(height: 25),
 
-      Row(
+            Row(
               children: [
                 const Text(
                   'Daftar Unit yang Dipinjam',
@@ -143,19 +168,19 @@ class DetailPeminjamanPage extends StatelessWidget {
               ],
             ),
 
-      const SizedBox(height: 10),
-      Expanded(
-        child: ListView.builder(
-          itemCount: unitDipinjamDummy.length,
-          itemBuilder: (context, index) {
-            final unit = unitDipinjamDummy[index];
-            return UnitDipinjamCard(unit: unit);
-          },
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: unitDipinjamDummy.length,
+                itemBuilder: (context, index) {
+                  final unit = unitDipinjamDummy[index];
+                  return UnitDipinjamCard(unit: unit);
+                },
+              ),
+            ),
+          ],
         ),
       ),
-    ],
-  ),
-),
     );
   }
 }

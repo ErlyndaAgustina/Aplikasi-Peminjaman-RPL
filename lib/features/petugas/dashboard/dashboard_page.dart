@@ -1,5 +1,6 @@
 import 'package:aplikasi_peminjaman_rpl/features/petugas/dashboard/models/model.dart';
 import 'package:flutter/material.dart';
+import '../../profile/profile_page.dart';
 import '../dashboard/widgets/summary_section.dart';
 import '../dashboard/widgets/quick_access_section.dart';
 import '../dashboard/widgets/transaksi_card.dart';
@@ -77,12 +78,23 @@ class _DashboardPetugasPageState extends State<DashboardPetugasPage> {
                     ],
                   ),
                 ),
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                  child: Icon(
-                    Icons.person,
-                    color: Color.fromRGBO(62, 159, 127, 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePenggunaPage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
+                    child: Icon(
+                      Icons.person,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
