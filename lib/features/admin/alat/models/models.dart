@@ -1,34 +1,44 @@
 class AlatModel {
+  final String id;
   final String nama;
   final String kode;
-  final String kategori;
+  final String kategoriId;
+  final String kategoriNama;
   final int jumlah;
 
   AlatModel({
+    required this.id,
     required this.nama,
     required this.kode,
-    required this.kategori,
+    required this.kategoriId,
+    required this.kategoriNama,
     required this.jumlah,
   });
+
+  factory AlatModel.fromMap(Map<String, dynamic> map) {
+    // Mengambil data dari join query Supabase '*, kategori(*)'
+    final kategori = map['kategori'] as Map<String, dynamic>?;
+    return AlatModel(
+      id: map['id_alat']?.toString() ?? '',
+      nama: map['nama_alat'] ?? '',
+      kode: map['kode_alat'] ?? '',
+      kategoriId: map['id_kategori']?.toString() ?? '',
+      kategoriNama: kategori?['nama_kategori'] ?? 'Tanpa Kategori',
+      jumlah: map['jumlah'] ?? 0,
+    );
+  }
 }
 
-final alatList = [
-  AlatModel(
-    nama: 'Macbook Pro',
-    kode: 'LPT-001',
-    kategori: 'Perangkat Komputasi',
-    jumlah: 12,
-  ),
-  AlatModel(
-    nama: 'Arduino',
-    kode: 'LPT-002',
-    kategori: 'Perangkat Mobile & IoT',
-    jumlah: 10,
-  ),
-  AlatModel(
-    nama: 'Router',
-    kode: 'LPT-003',
-    kategori: 'Perangkat Jaringan',
-    jumlah: 15,
-  ),
-];
+class KategoriModel {
+  final String id;
+  final String nama;
+
+  KategoriModel({required this.id, required this.nama});
+
+  factory KategoriModel.fromMap(Map<String, dynamic> map) {
+    return KategoriModel(
+      id: map['id_kategori'].toString(),
+      nama: map['nama_kategori'],
+    );
+  }
+}

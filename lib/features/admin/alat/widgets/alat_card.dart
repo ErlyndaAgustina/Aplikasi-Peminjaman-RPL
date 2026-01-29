@@ -4,18 +4,20 @@ import '../models/models.dart';
 import 'delete_alat_dialog.dart';
 import 'form_alat_dialog.dart';
 
+
 const String roboto = 'Roboto';
 
-class AlatCard extends StatefulWidget {
+class AlatCard extends StatelessWidget {
   final AlatModel alat;
+  final VoidCallback onRefresh;
 
-  const AlatCard({super.key, required this.alat});
+  // Pastikan HANYA ada dua parameter ini:
+  const AlatCard({
+    super.key, 
+    required this.alat, 
+    required this.onRefresh,
+  });
 
-  @override
-  State<AlatCard> createState() => _AlatCardState();
-}
-
-class _AlatCardState extends State<AlatCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -32,13 +34,12 @@ class _AlatCardState extends State<AlatCard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// LEFT
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.alat.nama,
+                      alat.nama,
                       style: const TextStyle(
                         fontFamily: roboto,
                         fontWeight: FontWeight.w800,
@@ -48,7 +49,7 @@ class _AlatCardState extends State<AlatCard> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Kode: ${widget.alat.kode}',
+                      'Kode: ${alat.kode}',
                       style: const TextStyle(
                         fontFamily: roboto,
                         fontSize: 14,
@@ -58,8 +59,6 @@ class _AlatCardState extends State<AlatCard> {
                   ],
                 ),
               ),
-
-              /// RIGHT
               Row(
                 children: [
                   const Icon(
@@ -69,7 +68,7 @@ class _AlatCardState extends State<AlatCard> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${widget.alat.jumlah} Unit',
+                    '${alat.jumlah} Unit',
                     style: const TextStyle(
                       fontSize: 14,
                       fontFamily: roboto,
@@ -87,18 +86,14 @@ class _AlatCardState extends State<AlatCard> {
           /// BARIS BAWAH (KATEGORI + ACTION)
           Row(
             children: [
-              /// LEFT
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color.fromRGBO(217, 253, 240, 1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  widget.alat.kategori,
+                  alat.kategoriNama, // Pakai kategoriNama dari model
                   style: const TextStyle(
                     fontSize: 12,
                     fontFamily: roboto,
@@ -107,12 +102,10 @@ class _AlatCardState extends State<AlatCard> {
                   ),
                 ),
               ),
-
               const Spacer(),
-
-              /// RIGHT
               Row(
                 children: [
+                  // Tombol Detail
                   _iconBtn(
                     Icons.visibility,
                     const Color.fromRGBO(236, 254, 248, 1),
@@ -124,8 +117,8 @@ class _AlatCardState extends State<AlatCard> {
                       );
                     },
                   ),
-
                   const SizedBox(width: 6),
+                  // Tombol Edit
                   _iconBtn(
                     Icons.edit,
                     const Color.fromRGBO(236, 254, 248, 1),
@@ -133,12 +126,16 @@ class _AlatCardState extends State<AlatCard> {
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (context) =>
-                            FormAlatDialog(isEdit: true, alat: widget.alat),
+                        builder: (context) => FormAlatDialog(
+                          isEdit: true, 
+                          alat: alat,
+                          onRefresh: onRefresh, // Kirim callback
+                        ),
                       );
                     },
                   ),
                   const SizedBox(width: 6),
+                  // Tombol Delete
                   _iconBtn(
                     Icons.delete,
                     const Color.fromRGBO(255, 119, 119, 0.22),
@@ -146,7 +143,11 @@ class _AlatCardState extends State<AlatCard> {
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (context) => const DeleteAlatDialog(),
+                        builder: (context) => DeleteAlatDialog(
+                          id: alat.id,
+                          nama: alat.nama,
+                          onDeleteSuccess: onRefresh, // Kirim callback
+                        ),
                       );
                     },
                   ),
@@ -159,12 +160,7 @@ class _AlatCardState extends State<AlatCard> {
     );
   }
 
-  Widget _iconBtn(
-    IconData icon,
-    Color bg, {
-    Color iconColor = Colors.black,
-    VoidCallback? onTap,
-  }) {
+  Widget _iconBtn(IconData icon, Color bg, {Color iconColor = Colors.black, VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),

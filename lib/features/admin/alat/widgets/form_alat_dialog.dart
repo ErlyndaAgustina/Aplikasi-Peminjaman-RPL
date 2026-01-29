@@ -1,16 +1,73 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
+import '../services/service.dart';
 
-class FormAlatDialog extends StatelessWidget {
+class FormAlatDialog extends StatefulWidget {
   final bool isEdit;
   final AlatModel? alat;
+  final VoidCallback onRefresh;
 
-  const FormAlatDialog({super.key, this.isEdit = false, this.alat});
+  const FormAlatDialog({
+    super.key,
+    this.isEdit = false,
+    this.alat,
+    required this.onRefresh,
+  });
+
+  @override
+  State<FormAlatDialog> createState() => _FormAlatDialogState();
+}
+
+class _FormAlatDialogState extends State<FormAlatDialog> {
+  final _namaController = TextEditingController();
+  final _kodeController = TextEditingController();
+  String? selectedKategoriId;
+  List<KategoriModel> daftarKategori = [];
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isEdit && widget.alat != null) {
+      _namaController.text = widget.alat!.nama;
+      _kodeController.text = widget.alat!.kode;
+      selectedKategoriId = widget.alat!.kategoriId;
+    }
+    loadKategori();
+  }
+
+  Future<void> loadKategori() async {
+    final data = await AlatService().getKategori();
+    setState(() => daftarKategori = data);
+  }
+
+  Future<void> simpan() async {
+    if (_namaController.text.isEmpty || selectedKategoriId == null) return;
+
+    setState(() => isLoading = true);
+    final data = {
+      'nama_alat': _namaController.text,
+      'kode_alat': _kodeController.text,
+      'id_kategori': selectedKategoriId,
+    };
+
+    try {
+      if (widget.isEdit) {
+        await AlatService().updateAlat(widget.alat!.id, data);
+      } else {
+        await AlatService().insertAlat(data);
+      }
+      widget.onRefresh();
+      Navigator.pop(context);
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     const Color primaryGreen = Color.fromRGBO(62, 159, 127, 1);
-    
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ClipRRect(
@@ -24,21 +81,27 @@ class FormAlatDialog extends StatelessWidget {
               color: primaryGreen,
               child: Row(
                 children: [
-                  Icon(isEdit ? Icons.edit : Icons.add, color: Colors.white, size: 22),
+                  Icon(
+                    widget.isEdit ? Icons.edit : Icons.add,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   Text(
-                    isEdit ? 'Edit Alat' : 'Tambah Alat',
+                    widget.isEdit ? 'Edit Alat' : 'Tambah Alat',
                     style: const TextStyle(
-                      color: Colors.white, 
-                      fontWeight: FontWeight.bold, 
-                      fontSize: 16,
-                      fontFamily: 'Roboto'
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const Spacer(),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.close, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -50,22 +113,36 @@ class FormAlatDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildLabel('Nama Alat *'),
-                  _buildTextField(hint: 'Masukkan nama alat', initialValue: alat?.nama),
-                  const SizedBox(height: 16),
-                  _buildLabel('Kode alat *'),
-                  _buildTextField(hint: 'Masukkan kode alat', initialValue: alat?.kode),
-                  const SizedBox(height: 16),
-                  _buildLabel('Kategori*'),
-                  _buildDropdown(initialValue: alat?.kategori),
-                  const SizedBox(height: 32),
-                  // ACTION BUTTONS
-                  Row(
-                    children: [
-                      Expanded(child: _buildButton('Batal', isOutlined: true, context: context)),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildButton(isEdit ? 'Simpan' : 'Tambah', context: context)),
-                    ],
+                  TextField(
+                    controller: _namaController,
+                    decoration: _inputDecoration('Nama'),
                   ),
+                  const SizedBox(height: 16),
+                  _buildLabel('Kode Alat *'),
+                  TextField(
+                    controller: _kodeController,
+                    decoration: _inputDecoration('Kode'),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildLabel('Kategori *'),
+                  _buildDropdown(),
+                  const SizedBox(height: 32),
+                  if (isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildButton('Batal', isOutlined: true),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildButton(
+                            widget.isEdit ? 'Simpan' : 'Tambah',
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -75,33 +152,16 @@ class FormAlatDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text, 
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF312F34))
-      ),
-    );
-  }
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+    hintText: hint,
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1)),
+    ),
+  );
 
-  Widget _buildTextField({required String hint, String? initialValue}) {
-    return TextFormField(
-      initialValue: initialValue,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), 
-          borderSide: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1))
-        ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  Widget _buildDropdown({String? initialValue}) {
+  Widget _buildDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -111,38 +171,30 @@ class FormAlatDialog extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           isExpanded: true,
-          hint: const Text('Masukkan kategori alat', style: TextStyle(fontSize: 14)),
-          value: initialValue,
-          items: ['Perangkat Jaringan', 'Perangkat Komputasi', 'Perangkat Mobile & IoT'].map((String val) {
-            return DropdownMenuItem<String>(value: val, child: Text(val));
-          }).toList(),
-          onChanged: (_) {},
+          value: selectedKategoriId,
+          items: daftarKategori
+              .map((k) => DropdownMenuItem(value: k.id, child: Text(k.nama)))
+              .toList(),
+          onChanged: (val) => setState(() => selectedKategoriId = val),
         ),
       ),
     );
   }
 
-  Widget _buildButton(String text, {bool isOutlined = false, required BuildContext context}) {
-    const Color primaryGreen = Color.fromRGBO(62, 159, 127, 1);
-    return SizedBox(
-      height: 44,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: isOutlined ? Colors.white : primaryGreen,
-          side: isOutlined ? const BorderSide(color: Color.fromRGBO(205, 238, 226, 1)) : BorderSide.none,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        onPressed: () => Navigator.pop(context),
-        child: Text(
-          text, 
-          style: TextStyle(
-            color: isOutlined ? primaryGreen : Colors.white, 
-            fontWeight: FontWeight.bold, 
-            fontSize: 16
-          )
-        ),
-      ),
-    );
-  }
+  Widget _buildLabel(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(t, style: const TextStyle(fontWeight: FontWeight.bold)),
+  );
+
+  Widget _buildButton(String text, {bool isOutlined = false}) => ElevatedButton(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: isOutlined
+          ? Colors.white
+          : const Color.fromRGBO(62, 159, 127, 1),
+      foregroundColor: isOutlined ? Colors.black : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    onPressed: isOutlined ? () => Navigator.pop(context) : simpan,
+    child: Text(text),
+  );
 }

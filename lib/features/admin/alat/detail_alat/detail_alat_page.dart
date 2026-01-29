@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../profile/profile_page.dart';
 import '../detail_alat/widgets/alat_header_card.dart';
-import '../detail_alat/widgets/models.dart';
+import 'models/model.dart';
 import '../detail_alat/widgets/unit_alat_card.dart';
 import 'widgets/form_unit_dialog.dart';
 

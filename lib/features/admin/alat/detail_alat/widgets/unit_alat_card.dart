@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'delete_confirm_dialog.dart';
 import 'form_unit_dialog.dart';
-import 'models.dart';
+import '../models/model.dart';
 import 'status_badge.dart';
 
 const String roboto = 'Roboto';

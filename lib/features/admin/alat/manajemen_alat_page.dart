@@ -4,6 +4,7 @@ import '../../profile/profile_page.dart';
 import '../alat/widgets/filter.dart';
 import 'models/models.dart';
 import '../sidebar/sidebar_admin.dart';
+import 'services/service.dart';
 import 'widgets/form_alat_dialog.dart';
 
 const String roboto = 'Roboto';
@@ -16,40 +17,34 @@ class ManajemenAlatPage extends StatefulWidget {
 }
 
 class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
-  // State untuk menyimpan filter
   String searchQuery = '';
   String selectedKategori = 'Semua Status';
+  List<AlatModel> allAlat = [];
+  bool loading = true;
 
-  // Logika Filter Data
-  // Logika Filter Data yang Lebih Aman
+  @override
+  void initState() {
+    super.initState();
+    loadAlat();
+  }
+
+  Future<void> loadAlat() async {
+    setState(() => loading = true);
+    final data = await AlatService().fetchAlat();
+    setState(() {
+      allAlat = data;
+      loading = false;
+    });
+  }
+
   List<AlatModel> get filteredAlat {
-    // Jika list utama null atau kosong, langsung kembalikan list kosong
-    if (alatList.isEmpty) return [];
-
-    return alatList.where((alat) {
-      // 1. Pastikan objek 'alat' itu sendiri tidak null
-      // ignore: unnecessary_null_comparison
-      if (alat == null) return false;
-
-      // 2. Ambil nilai dengan pengaman (?? "") untuk menghindari undefined
-      final String nama = (alat.nama ?? "").toString().toLowerCase();
-      final String kode = (alat.kode ?? "").toString().toLowerCase();
-      final String query = searchQuery.toLowerCase();
-
-      // 3. Cek pencarian
-      final bool matchesSearch = nama.contains(query) || kode.contains(query);
-
-      // 4. Cek kategori (Gunakan toLowerCase pada kedua sisi agar aman)
-      final String kategoriAlat = (alat.kategori ?? "")
-          .toString()
-          .toLowerCase()
-          .trim();
-      final String kategoriSelected = selectedKategori.toLowerCase().trim();
-
-      final bool matchesKategori =
+    return allAlat.where((item) {
+      final matchesSearch =
+          item.nama.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          item.kode.toLowerCase().contains(searchQuery.toLowerCase());
+      final matchesKategori =
           selectedKategori == 'Semua Status' ||
-          kategoriAlat == kategoriSelected;
-
+          item.kategoriNama == selectedKategori;
       return matchesSearch && matchesKategori;
     }).toList();
   }
@@ -156,11 +151,14 @@ class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
                 ),
               ),
               onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => const FormAlatDialog(isEdit: false),
-                );
-              },
+  showDialog(
+    context: context,
+    builder: (context) => FormAlatDialog(
+      isEdit: false, 
+      onRefresh: loadAlat, // Pastikan ini ada
+    ),
+  );
+},
               icon: const Icon(Icons.add, color: Colors.white, size: 22),
               label: const Text(
                 'Tambah Alat',
@@ -235,12 +233,18 @@ class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: filteredAlat.isEmpty
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredAlat.isEmpty
                   ? const Center(child: Text('Data tidak ditemukan'))
                   : ListView.builder(
                       itemCount: filteredAlat.length,
                       itemBuilder: (context, index) {
-                        return AlatCard(alat: filteredAlat[index]);
+                        return AlatCard(
+                          alat: filteredAlat[index],
+                          onRefresh:
+                              loadAlat, // Tambahkan ini agar error pertama hilang
+                        );
                       },
                     ),
             ),
