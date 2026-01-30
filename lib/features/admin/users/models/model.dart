@@ -1,34 +1,33 @@
 class UserModel {
-  final String initials;
+  final String idUser; // UUID dari database
   final String name;
   final String email;
   final String role;
 
   UserModel({
-    required this.initials,
+    required this.idUser,
     required this.name,
     required this.email,
     required this.role,
   });
-}
 
-final users = [
-  UserModel(
-    initials: 'AD',
-    name: 'Admin',
-    email: 'admin@brantas.sch.id',
-    role: 'Admin',
-  ),
-  UserModel(
-    initials: 'PS',
-    name: 'Petugas',
-    email: 'petugas@brantas.sch.id',
-    role: 'Petugas',
-  ),
-  UserModel(
-    initials: 'SW',
-    name: 'Siswa',
-    email: 'siswa@brantas.sch.id',
-    role: 'Peminjam',
-  ),
-];
+  // Ambil inisial otomatis dari nama
+  String get initials {
+    if (name.isEmpty) return "??";
+    List<String> parts = name.trim().split(" ");
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  }
+
+  // Konversi dari Map Supabase ke Model
+  factory UserModel.fromMap(Map<String, dynamic> map) {
+    return UserModel(
+      idUser: map['id_user'] ?? '',
+      name: map['nama'] ?? '',
+      email: map['email'] ?? '',
+      role: map['role'] ?? 'peminjam',
+    );
+  }
+}

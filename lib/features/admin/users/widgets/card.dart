@@ -198,6 +198,4 @@ class UserCard extends StatelessWidget {
     );
   }
 
-  // Hubungkan ke tombol di Row:
-  // onPressed: () => _showDeleteConfirmation(context), // Tombol Hapus
 }

@@ -20,6 +20,28 @@ class SidebarAdminDrawer extends StatefulWidget {
 
 class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
   static const String roboto = SidebarAdminDrawer.roboto;
+  final _supabase = Supabase.instance.client;
+
+  // Fungsi untuk ambil data user yang sedang login dari database
+  Future<Map<String, dynamic>> _getUserData() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception("User not logged in");
+
+    return await _supabase
+        .from('users')
+        .select()
+        .eq('auth_user_id', user.id)
+        .single();
+  }
+
+  // Helper untuk buat inisial (Contoh: Admin Brantas -> AB)
+  String _getInisial(String nama) {
+    List<String> names = nama.trim().split(" ");
+    if (names.length > 1) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0].isNotEmpty ? names[0][0].toUpperCase() : "?";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,219 +50,165 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
       child: SafeArea(
         child: Column(
           children: [
-            // Header dengan X button
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            // Header Dinamis menggunakan FutureBuilder
+            FutureBuilder<Map<String, dynamic>>(
+              future: _getUserData(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  );
+                }
+
+                // Jika error atau data kosong, pakai fallback default
+                final userData = snapshot.data;
+                final String nama = userData?['nama'] ?? 'Admin';
+                final String email = userData?['email'] ?? 'admin@brantas.sch.id';
+                final String role = userData?['role'] ?? 'Admin';
+
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Avatar Siswa
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(217, 253, 240, 1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'AD',
-                            style: TextStyle(
-                              fontFamily: roboto,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromRGBO(72, 141, 117, 1),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Admin',
-                            style: TextStyle(
-                              fontFamily: roboto,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: Color.fromRGBO(49, 47, 52, 1),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'admin@brantas.sch.id',
-                            style: TextStyle(
-                              fontFamily: roboto,
-                              fontSize: 12,
-                              color: Color.fromRGBO(72, 141, 117, 1),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
+                          // Avatar Dinamis
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
+                            width: 50,
+                            height: 50,
+                            decoration: const BoxDecoration(
                               color: Color.fromRGBO(217, 253, 240, 1),
-                              borderRadius: BorderRadius.circular(8),
+                              shape: BoxShape.circle,
                             ),
-                            child: const Text(
-                              'Admin',
-                              style: TextStyle(
-                                fontFamily: roboto,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Color.fromRGBO(1, 85, 56, 1),
+                            child: Center(
+                              child: Text(
+                                _getInisial(nama),
+                                style: const TextStyle(
+                                  fontFamily: roboto,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromRGBO(72, 141, 117, 1),
+                                ),
                               ),
                             ),
                           ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                nama,
+                                style: const TextStyle(
+                                  fontFamily: roboto,
+                                  fontSize: 14, // Dikecilkan sedikit agar muat
+                                  fontWeight: FontWeight.w800,
+                                  color: Color.fromRGBO(49, 47, 52, 1),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                email,
+                                style: const TextStyle(
+                                  fontFamily: roboto,
+                                  fontSize: 11,
+                                  color: Color.fromRGBO(72, 141, 117, 1),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              // Label Role Dinamis
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color.fromRGBO(217, 253, 240, 1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  role.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontFamily: roboto,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color.fromRGBO(1, 85, 56, 1),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(Icons.close, size: 20, color: Colors.black),
                       ),
                     ],
                   ),
-                  // Close button
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      child: const Icon(
-                        Icons.close,
-                        size: 20,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
 
             // Logo RPLKIT
             Padding(
-              padding: const EdgeInsets.symmetric(),
+              padding: const EdgeInsets.symmetric(vertical: 10),
               child: Center(
                 child: Image.asset(
                   'assets/images/logo.png',
-                  width: 200,
+                  width: 180,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.dashboard_customize,
-                      color: Color.fromRGBO(62, 159, 127, 1),
-                      size: 30,
-                    );
-                  },
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.dashboard_customize,
+                    color: Color.fromRGBO(62, 159, 127, 1),
+                    size: 30,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(
-                height: 3,
-                color: Color.fromRGBO(205, 238, 226, 1),
-              ),
+              child: Divider(height: 3, color: Color.fromRGBO(205, 238, 226, 1)),
             ),
 
             // Menu Items
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 20),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 children: [
                   _buildMenuItem(
                     icon: Icons.dashboard_outlined,
                     title: 'Dashboard',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DashboardAdminPage(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigate(context, const DashboardAdminPage()),
                   ),
                   _buildMenuItem(
-                    icon: Icons.group,
+                    icon: Icons.group_outlined,
                     title: 'Manajemen Pengguna',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ManajemenPenggunaPage(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigate(context, const ManajemenPenggunaPage()),
                   ),
                   _buildMenuItem(
-                    icon: Icons.list_alt_outlined,
+                    icon: Icons.inventory_2_outlined,
                     title: 'Manajemen Alat',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ManajemenAlatPage(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigate(context, const ManajemenAlatPage()),
                   ),
                   _buildMenuItem(
-                    icon: Icons.category,
+                    icon: Icons.category_outlined,
                     title: 'Manajemen Kategori',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ManajemenKategoriPage(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigate(context, const ManajemenKategoriPage()),
                   ),
                   _buildMenuItem(
-                    icon: Icons.assignment,
+                    icon: Icons.assignment_outlined,
                     title: 'Manajemen Peminjaman',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ManajemenPeminjamanPage(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigate(context, const ManajemenPeminjamanPage()),
                   ),
                   _buildMenuItem(
-                    icon: Icons.assignment_return,
+                    icon: Icons.assignment_return_outlined,
                     title: 'Manajemen Pengembalian',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PengembalianPage(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigate(context, const PengembalianPage()),
                   ),
                   _buildMenuItem(
                     icon: Icons.history_outlined,
                     title: 'Log Aktivitas',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LogAktivitasPage(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigate(context, const LogAktivitasPage()),
                   ),
                 ],
               ),
@@ -253,26 +221,14 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // JANGAN tutup drawer dulu, langsung tampilkan dialog
-                    _showLogoutDialog();
-                  },
+                  onPressed: _showLogoutDialog,
                   icon: const Icon(Icons.logout, size: 20),
-                  label: const Text(
-                    'Logout',
-                    style: TextStyle(
-                      fontFamily: roboto,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  label: const Text('Logout', style: TextStyle(fontFamily: roboto, fontSize: 14, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   ),
                 ),
               ),
@@ -283,30 +239,19 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
+  // Helper navigasi biar kode lebih bersih
+  void _navigate(BuildContext context, Widget page) {
+    Navigator.pop(context); // Tutup drawer
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => page));
+  }
+
+  Widget _buildMenuItem({required IconData icon, required String title, required VoidCallback onTap}) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: const Color.fromRGBO(72, 141, 117, 1),
-        size: 22,
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontFamily: roboto,
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          color: Color.fromRGBO(72, 141, 117, 1),
-        ),
-      ),
+      leading: Icon(icon, color: const Color.fromRGBO(72, 141, 117, 1), size: 22),
+      title: Text(title, style: const TextStyle(fontFamily: roboto, fontSize: 13, fontWeight: FontWeight.w700, color: Color.fromRGBO(72, 141, 117, 1))),
       onTap: onTap,
       dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      horizontalTitleGap: 12,
+      horizontalTitleGap: 8,
     );
   }
 

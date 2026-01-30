@@ -1,41 +1,48 @@
 enum UserRole { admin, petugas, peminjam }
 
 class UserModel {
+  final String idUser;
+  final String authUserId;
   final String nama;
   final String email;
   final UserRole role;
+  final DateTime? createdAt;
 
   UserModel({
+    required this.idUser,
+    required this.authUserId,
     required this.nama,
     required this.email,
     required this.role,
+    this.createdAt,
   });
 
-  // Fungsi untuk mendapatkan inisial (Contoh: Erlynda Agustina -> EA)
+  // Mapping dari Database (Map) ke Model
+  factory UserModel.fromMap(Map<String, dynamic> map) {
+    return UserModel(
+      idUser: map['id_user'],
+      authUserId: map['auth_user_id'],
+      nama: map['nama'] ?? 'Tanpa Nama',
+      email: map['email'] ?? '',
+      role: UserRole.values.firstWhere(
+        (e) => e.name == map['role'],
+        orElse: () => UserRole.peminjam,
+      ),
+      createdAt: map['created_at'] != null 
+          ? DateTime.parse(map['created_at']) 
+          : null,
+    );
+  }
+
   String get inisial {
     List<String> names = nama.trim().split(" ");
-    String initials = "";
     if (names.length > 1) {
-      initials = names[0][0] + names[1][0];
-    } else if (names.isNotEmpty) {
-      initials = names[0][0];
+      return (names[0][0] + names[1][0]).toUpperCase();
+    } else if (names.isNotEmpty && names[0].isNotEmpty) {
+      return names[0][0].toUpperCase();
     }
-    return initials.toUpperCase();
+    return "?";
   }
 
-  // Mendapatkan string label role
-  String get roleLabel {
-    switch (role) {
-      case UserRole.admin: return 'Admin';
-      case UserRole.petugas: return 'Petugas';
-      case UserRole.peminjam: return 'Peminjam';
-    }
-  }
+  String get roleLabel => role.name.substring(0, 1).toUpperCase() + role.name.substring(1);
 }
-
-// DATA DUMMY (Bisa kamu ganti role-nya di sini untuk testing)
-final currentUser = UserModel(
-  nama: "Erlynda Agustina",
-  email: "erlyndaaa@gmail.com",
-  role: UserRole.admin, 
-);
