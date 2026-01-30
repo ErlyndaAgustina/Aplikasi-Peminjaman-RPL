@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../detail_alat/models/model.dart';
 import '../models/models.dart';
 
 class AlatService {
@@ -7,25 +8,31 @@ class AlatService {
   /// AMBIL SEMUA ALAT (DENGAN JOIN KATEGORI)
   Future<List<AlatModel>> fetchAlat() async {
     try {
-      final res = await supabase
+      final response = await Supabase.instance.client
           .from('alat')
-          .select('*, kategori(*)')
-          .order('nama_alat');
-      return res.map<AlatModel>((e) => AlatModel.fromMap(e)).toList();
+          .select('*, alat_unit(count), kategori(nama_kategori)')
+          .order('nama_alat', ascending: true);
+
+      return (response as List).map((data) {
+        final int hitungUnit = (data['alat_unit'] as List).isNotEmpty
+            ? data['alat_unit'][0]['count'] ?? 0
+            : 0;
+
+        return AlatModel.fromMap(data, jumlahUnit: hitungUnit);
+      }).toList();
     } catch (e) {
-      print('Error fetchAlat: $e');
+      print("Error Fetch Alat: $e");
       return [];
     }
   }
 
-  /// AMBIL SEMUA KATEGORI (Hanya satu fungsi saja)
   Future<List<KategoriModel>> getKategori() async {
     try {
       final res = await supabase
           .from('kategori')
           .select()
           .order('nama_kategori', ascending: true);
-      
+
       return res.map<KategoriModel>((e) => KategoriModel.fromMap(e)).toList();
     } catch (e) {
       print('Error getKategori: $e');
@@ -47,5 +54,49 @@ class AlatService {
   Future<void> deleteAlat(String id) async {
     await supabase.from('alat').delete().eq('id_alat', id);
   }
-}
 
+  /// AMBIL UNIT BERDASARKAN ID ALAT
+  Future<List<UnitAlatModel>> fetchUnitAlat(String idAlat) async {
+    try {
+      final res = await supabase
+          .from('alat_unit')
+          .select()
+          .eq('id_alat', idAlat)
+          .order('kode_unit', ascending: true);
+
+      // Map datanya ke model UnitAlatModel
+      return res.map<UnitAlatModel>((e) => UnitAlatModel.fromMap(e)).toList();
+    } catch (e) {
+      print('Error fetchUnitAlat: $e');
+      return [];
+    }
+  }
+
+  // Tambahkan di dalam class AlatService
+  Future<void> insertUnitAlat(Map<String, dynamic> data) async {
+    await supabase.from('alat_unit').insert(data);
+  }
+
+  Future<void> updateUnitAlat(String idUnit, Map<String, dynamic> data) async {
+    await supabase.from('alat_unit').update(data).eq('id_unit', idUnit);
+  }
+
+  Future<void> deleteUnitAlat(String idUnit) async {
+    await supabase.from('alat_unit').delete().eq('id_unit', idUnit);
+  }
+
+  Future<AlatModel?> fetchAlatById(String id) async {
+    try {
+      final res = await supabase
+          .from('alat')
+          .select('*, kategori(*)')
+          .eq('id_alat', id)
+          .single();
+
+      return AlatModel.fromMap(res);
+    } catch (e) {
+      print('Error fetchAlatById: $e');
+      return null;
+    }
+  }
+}

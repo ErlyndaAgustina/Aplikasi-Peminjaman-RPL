@@ -1,6 +1,8 @@
+import 'package:aplikasi_peminjaman_rpl/features/admin/alat/models/models.dart';
 import 'package:flutter/material.dart';
 import '../../../profile/profile_page.dart';
 import '../detail_alat/widgets/alat_header_card.dart';
+import '../services/service.dart';
 import 'models/model.dart';
 import '../detail_alat/widgets/unit_alat_card.dart';
 import 'widgets/form_unit_dialog.dart';
@@ -8,35 +10,61 @@ import 'widgets/form_unit_dialog.dart';
 const String roboto = 'Roboto';
 
 class DetailAlatPage extends StatefulWidget {
-  const DetailAlatPage({super.key});
+  final String id;
+  final AlatModel? alat;
+  const DetailAlatPage({super.key, required this.id, this.alat});
 
   @override
   State<DetailAlatPage> createState() => _DetailAlatPageState();
 }
 
 class _DetailAlatPageState extends State<DetailAlatPage> {
-  // 1. Tambahkan variabel untuk menyimpan input pencarian
   String searchQuery = '';
+  List<UnitAlatModel> unitAlatList = [];
+  AlatModel? currentAlat;
+  bool isLoading = true;
 
-  // 2. Buat getter untuk memfilter list unit berdasarkan pencarian
-  List<UnitAlatModel> get filteredUnitAlat {
-    // Jika kolom pencarian kosong, tampilkan semua
-    if (searchQuery.isEmpty) {
-      return unitAlatList;
+  @override
+  void initState() {
+    super.initState();
+    currentAlat = widget.alat;
+    _refreshSemuaData();
+  }
+
+  Future<void> _refreshSemuaData() async {
+    if (!mounted) return;
+    setState(() => isLoading = true);
+
+    try {
+      final results = await Future.wait([
+        AlatService().fetchUnitAlat(widget.id),
+        AlatService().fetchAlatById(widget.id),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          unitAlatList = results[0] as List<UnitAlatModel>;
+          currentAlat = results[1] as AlatModel?;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal memuat data: $e")));
+      }
     }
+  }
 
+  List<UnitAlatModel> get filteredUnitAlat {
+    if (searchQuery.isEmpty) return unitAlatList;
     return unitAlatList.where((unit) {
-      // Kita filter berdasarkan properti yang ada di model kamu:
-      // Pastikan nama variabel (kodeUnit, kondisi, status) sesuai dengan di models.dart
-      final String kode = (unit.kodeUnit ?? "").toLowerCase();
-      final String kondisi = (unit.kondisi ?? "").toLowerCase();
-      final String status = (unit.status ?? "").toLowerCase();
       final String query = searchQuery.toLowerCase();
-
-      // User bisa cari berdasarkan kode, kondisi (Misal: "Baik"), atau status (Misal: "Tersedia")
-      return kode.contains(query) ||
-          kondisi.contains(query) ||
-          status.contains(query);
+      return unit.kodeUnit.toLowerCase().contains(query) ||
+          unit.kondisi.toLowerCase().contains(query) ||
+          unit.status.toLowerCase().contains(query);
     }).toList();
   }
 
@@ -58,13 +86,10 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
             ),
           ),
           child: SafeArea(
-            bottom: false,
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
+                  onTap: () => Navigator.pop(context),
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -78,11 +103,11 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'Detail Unit Alat',
                         style: TextStyle(
@@ -92,7 +117,6 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                           color: Color.fromRGBO(49, 47, 52, 1),
                         ),
                       ),
-                      SizedBox(height: 2),
                       Text(
                         'RPLKIT • SMK Brantas Karangkates',
                         style: TextStyle(
@@ -128,97 +152,88 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const AlatHeaderCard(),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
-                minimumSize: const Size.fromHeight(44),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+      body: RefreshIndicator(
+        onRefresh: _refreshSemuaData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              AlatHeaderCard(
+                alat: currentAlat,
+                count: unitAlatList.length,
               ),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => const FormUnitDialog(isEdit: false),
-                );
-              },
-              icon: const Icon(Icons.add, color: Colors.white, size: 22),
-              label: const Text(
-                'Tambah Unit',
-                style: TextStyle(
-                  fontFamily: roboto,
-                  fontSize: 15,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(height: 25),
-            Row(
-              children: [
-                const Text(
-                  'Daftar Unit Alat',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontFamily: roboto,
-                    color: Color.fromRGBO(49, 47, 52, 1),
-                    fontSize: 18,
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
+                  minimumSize: const Size.fromHeight(44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(62, 159, 127, 1), // hijau muda
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Text(
-                    // Update jumlah tersedia secara dinamis
-                    '${filteredUnitAlat.length} Tersedia',
-                    style: const TextStyle(
-                      fontFamily: roboto,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => FormUnitDialog(
+                      isEdit: false,
+                      idAlat: widget.id,
+                      onRefresh: _refreshSemuaData,
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 40,
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
+                  );
                 },
-                style: const TextStyle(
-                  fontFamily: roboto,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color.fromRGBO(72, 141, 117, 1),
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Cari kode unit alat atau kondisi...',
-                  hintStyle: const TextStyle(
+                icon: const Icon(Icons.add, color: Colors.white, size: 22),
+                label: const Text(
+                  'Tambah Unit',
+                  style: TextStyle(
                     fontFamily: roboto,
                     fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Color.fromRGBO(72, 141, 117, 1),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                   ),
+                ),
+              ),
+              const SizedBox(height: 25),
+              Row(
+                children: [
+                  const Text(
+                    'Daftar Unit Alat',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontFamily: roboto,
+                      color: Color.fromRGBO(49, 47, 52, 1),
+                      fontSize: 18,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(62, 159, 127, 1),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Text(
+                      '${filteredUnitAlat.length} Unit',
+                      style: const TextStyle(
+                        fontFamily: roboto,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                onChanged: (value) => setState(() => searchQuery = value),
+                decoration: InputDecoration(
+                  hintText: 'Cari kode unit atau kondisi...',
                   prefixIcon: const Icon(
                     Icons.search,
-                    size: 22,
                     color: Color.fromRGBO(72, 141, 117, 1),
                   ),
                   filled: true,
@@ -231,52 +246,35 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                     borderRadius: BorderRadius.circular(14),
                     borderSide: const BorderSide(
                       color: Color.fromRGBO(205, 238, 226, 1),
-                      width: 1.2,
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: Color.fromRGBO(72, 141, 117, 1),
-                      width: 1.5,
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 8,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredUnitAlat.length, // Gunakan list hasil filter
-              itemBuilder: (context, index) {
-                final unitAlat = filteredUnitAlat[index];
-                return UnitAlatCard(unit: unitAlat);
-              },
-            ),
-            // Di dalam Column body:
-            filteredUnitAlat.isEmpty
-                ? const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text(
-                      "Unit tidak ditemukan...",
-                      style: TextStyle(color: Colors.grey),
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredUnitAlat.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        "Unit tidak ditemukan...",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredUnitAlat.length,
+                      itemBuilder: (context, index) {
+                        return UnitAlatCard(
+                          unit: filteredUnitAlat[index],
+                          onRefresh: _refreshSemuaData,
+                        );
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredUnitAlat.length,
-                    itemBuilder: (context, index) {
-                      return UnitAlatCard(unit: filteredUnitAlat[index]);
-                    },
-                  ),
-          ],
+            ],
+          ),
         ),
       ),
     );

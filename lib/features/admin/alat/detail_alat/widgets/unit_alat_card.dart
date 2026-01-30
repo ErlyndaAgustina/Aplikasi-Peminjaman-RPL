@@ -8,8 +8,9 @@ const String roboto = 'Roboto';
 
 class UnitAlatCard extends StatelessWidget {
   final UnitAlatModel unit;
+  final VoidCallback onRefresh; // Tambahkan ini
 
-  const UnitAlatCard({super.key, required this.unit});
+  const UnitAlatCard({super.key, required this.unit, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +59,11 @@ class UnitAlatCard extends StatelessWidget {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) =>
-                          FormUnitDialog(isEdit: true, unit: unit),
+                      builder: (context) => FormUnitDialog(
+                        isEdit: true,
+                        unit: unit,
+                        onRefresh: onRefresh,
+                      ),
                     );
                   },
                   style: OutlinedButton.styleFrom(
@@ -92,7 +96,10 @@ class UnitAlatCard extends StatelessWidget {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => const DeleteConfirmDialog(),
+                      builder: (context) => DeleteConfirmDialog(
+                        idUnit: unit.idUnit,
+                        onDeleteSuccess: onRefresh,
+                      ),
                     );
                   },
                   style: OutlinedButton.styleFrom(

@@ -1,34 +1,26 @@
 class UnitAlatModel {
+  final String idUnit;
+  final String idAlat;
   final String kodeUnit;
   final String kondisi;
   final String status;
 
   UnitAlatModel({
+    required this.idUnit,
+    required this.idAlat,
     required this.kodeUnit,
     required this.kondisi,
     required this.status,
   });
-}
 
-final unitAlatList = [
-  UnitAlatModel(
-    kodeUnit: 'LTP-001-U1',
-    kondisi: 'Baik',
-    status: 'Tersedia',
-  ),
-  UnitAlatModel(
-    kodeUnit: 'LTP-001-U2',
-    kondisi: 'Baik',
-    status: 'Dipinjam',
-  ),
-  UnitAlatModel(
-    kodeUnit: 'LTP-001-U3',
-    kondisi: 'Mati total',
-    status: 'Rusak',
-  ),
-  UnitAlatModel(
-    kodeUnit: 'LTP-001-U4',
-    kondisi: 'Keyboard repair',
-    status: 'Perbaikan',
-  ),
-];
+  // Gunakan fromMap supaya seragam dengan model lainnya
+  factory UnitAlatModel.fromMap(Map<String, dynamic> map) {
+    return UnitAlatModel(
+      idUnit: map['id_unit'] ?? '',
+      idAlat: map['id_alat'] ?? '',
+      kodeUnit: map['kode_unit'] ?? '',
+      kondisi: map['kondisi'] ?? '',
+      status: map['status'] ?? '',
+    );
+  }
+}

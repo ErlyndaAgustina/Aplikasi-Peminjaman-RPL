@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../services/service.dart';
+
 class DeleteConfirmDialog extends StatelessWidget {
-  const DeleteConfirmDialog({super.key});
+  final String idUnit;
+  final VoidCallback onDeleteSuccess;
+
+  const DeleteConfirmDialog({
+    super.key,
+    required this.idUnit,
+    required this.onDeleteSuccess,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,14 +26,22 @@ class DeleteConfirmDialog extends StatelessWidget {
             const Text(
               'Apakah yakin ingin menghapus Detail Alat?',
               textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Color(0xFF312F34)),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: Color(0xFF312F34),
+              ),
             ),
             const SizedBox(height: 32),
             Row(
               children: [
-                Expanded(child: _buildBtn('Batal', isRed: false, context: context)),
+                Expanded(
+                  child: _buildBtn('Batal', isRed: false, context: context),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildBtn('Hapus', isRed: true, context: context)),
+                Expanded(
+                  child: _buildBtn('Hapus', isRed: true, context: context),
+                ),
               ],
             ),
           ],
@@ -33,16 +50,34 @@ class DeleteConfirmDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildBtn(String text, {required bool isRed, required BuildContext context}) {
+  Widget _buildBtn(
+    String text, {
+    required bool isRed,
+    required BuildContext context,
+  }) {
     return SizedBox(
       height: 44,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: isRed ? Colors.red : const Color.fromRGBO(62, 159, 127, 1)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          side: BorderSide(
+            color: isRed ? Colors.red : const Color.fromRGBO(62, 159, 127, 1),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
-        onPressed: () => Navigator.pop(context),
-        child: Text(text, style: TextStyle(color: isRed ? Colors.red : const Color.fromRGBO(62, 159, 127, 1), fontWeight: FontWeight.bold)),
+        onPressed: () async {
+          await AlatService().deleteUnitAlat(idUnit);
+          onDeleteSuccess();
+          Navigator.pop(context);
+        },
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isRed ? Colors.red : const Color.fromRGBO(62, 159, 127, 1),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }

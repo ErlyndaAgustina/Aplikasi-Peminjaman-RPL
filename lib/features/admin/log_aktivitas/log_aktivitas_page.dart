@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../profile/profile_page.dart';
 import '../sidebar/sidebar_admin.dart';
 import 'models/model.dart';
+import 'service/LogService.dart';
 import 'widgets/log_card.dart';
 
 const String roboto = 'Roboto';
@@ -14,6 +15,25 @@ class LogAktivitasPage extends StatefulWidget {
 }
 
 class _LogAktivitasPageState extends State<LogAktivitasPage> {
+  final LogService _logService = LogService();
+  List<LogAktivitasModel> _logs = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    final data = await _logService.fetchLogs();
+    setState(() {
+      _logs = data;
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,7 +65,10 @@ class _LogAktivitasPageState extends State<LogAktivitasPage> {
                   child: Builder(
                     builder: (context) => GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
-                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                      child: Icon(
+                        Icons.menu,
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
                     ),
                   ),
                 ),
@@ -100,13 +123,20 @@ class _LogAktivitasPageState extends State<LogAktivitasPage> {
           ),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: logDummy.length,
-        itemBuilder: (context, index) {
-          return LogCard(data: logDummy[index]);
-        },
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: _logs.isEmpty
+                  ? const Center(child: Text("Belum ada aktivitas"))
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _logs.length,
+                      itemBuilder: (context, index) {
+                        return LogCard(data: _logs[index]);
+                      },
+                    ),
+            ),
     );
   }
 }

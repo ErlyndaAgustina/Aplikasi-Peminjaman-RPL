@@ -4,22 +4,20 @@ import '../models/models.dart';
 import 'delete_alat_dialog.dart';
 import 'form_alat_dialog.dart';
 
-
 const String roboto = 'Roboto';
 
 class AlatCard extends StatelessWidget {
   final AlatModel alat;
   final VoidCallback onRefresh;
 
-  // Pastikan HANYA ada dua parameter ini:
-  const AlatCard({
-    super.key, 
-    required this.alat, 
-    required this.onRefresh,
-  });
+  const AlatCard({super.key, required this.alat, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
+    // Pastikan variabel ini mengambil nilai jumlah dari model
+    // Jika di model namanya 'jumlahUnit', ganti alat.jumlah jadi alat.jumlahUnit
+    final String totalUnit = alat.jumlah.toString(); 
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
@@ -30,7 +28,6 @@ class AlatCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          /// BARIS ATAS (NAMA + UNIT)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -54,38 +51,48 @@ class AlatCard extends StatelessWidget {
                         fontFamily: roboto,
                         fontSize: 14,
                         color: Color.fromRGBO(72, 141, 117, 1),
+                        fontWeight: FontWeight.w600, // Sedikit lebih tebal agar terbaca
                       ),
                     ),
                   ],
                 ),
               ),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.inventory_2_outlined,
-                    size: 18,
-                    color: Color.fromRGBO(1, 85, 56, 1),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${alat.jumlah} Unit',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontFamily: roboto,
-                      fontWeight: FontWeight.bold,
+              // BAGIAN JUMLAH UNIT
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(217, 253, 240, 0.5), // Green soft bg
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 16,
                       color: Color.fromRGBO(1, 85, 56, 1),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    Text(
+                      '$totalUnit Unit', // Menampilkan jumlah dinamis
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontFamily: roboto,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromRGBO(1, 85, 56, 1),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
 
           const SizedBox(height: 16),
 
-          /// BARIS BAWAH (KATEGORI + ACTION)
           Row(
             children: [
+              // Badge Kategori
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
@@ -93,7 +100,7 @@ class AlatCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  alat.kategoriNama, // Pakai kategoriNama dari model
+                  alat.kategoriNama,
                   style: const TextStyle(
                     fontSize: 12,
                     fontFamily: roboto,
@@ -103,39 +110,42 @@ class AlatCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              // Action Buttons
               Row(
                 children: [
-                  // Tombol Detail
                   _iconBtn(
                     Icons.visibility,
                     const Color.fromRGBO(236, 254, 248, 1),
-                    iconColor: const Color.fromRGBO(93, 93, 93, 1),
+                    iconColor: const Color.fromRGBO(62, 159, 127, 1), // Warna hijau brand
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => DetailAlatPage()),
-                      );
+                        MaterialPageRoute(
+                          builder: (context) => DetailAlatPage(
+                            id: alat.id,
+                            alat: alat,
+                          ),
+                        ),
+                      ).then((_) => onRefresh()); // Refresh saat kembali dari detail
                     },
                   ),
-                  const SizedBox(width: 6),
-                  // Tombol Edit
+                  const SizedBox(width: 8),
                   _iconBtn(
                     Icons.edit,
                     const Color.fromRGBO(236, 254, 248, 1),
-                    iconColor: const Color.fromRGBO(93, 93, 93, 1),
+                    iconColor: const Color.fromRGBO(62, 159, 127, 1),
                     onTap: () {
                       showDialog(
                         context: context,
                         builder: (context) => FormAlatDialog(
-                          isEdit: true, 
+                          isEdit: true,
                           alat: alat,
-                          onRefresh: onRefresh, // Kirim callback
+                          onRefresh: onRefresh,
                         ),
                       );
                     },
                   ),
-                  const SizedBox(width: 6),
-                  // Tombol Delete
+                  const SizedBox(width: 8),
                   _iconBtn(
                     Icons.delete,
                     const Color.fromRGBO(255, 119, 119, 0.22),
@@ -146,7 +156,7 @@ class AlatCard extends StatelessWidget {
                         builder: (context) => DeleteAlatDialog(
                           id: alat.id,
                           nama: alat.nama,
-                          onDeleteSuccess: onRefresh, // Kirim callback
+                          onDeleteSuccess: onRefresh,
                         ),
                       );
                     },
@@ -160,7 +170,12 @@ class AlatCard extends StatelessWidget {
     );
   }
 
-  Widget _iconBtn(IconData icon, Color bg, {Color iconColor = Colors.black, VoidCallback? onTap}) {
+  Widget _iconBtn(
+    IconData icon,
+    Color bg, {
+    Color iconColor = Colors.black,
+    VoidCallback? onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),

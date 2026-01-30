@@ -1,6 +1,6 @@
 class LogAktivitasModel {
-  final String aksi; // Approve, Create, Update
-  final String kategori; // Peminjaman, Alat
+  final String aksi;
+  final String kategori;
   final String deskripsi;
   final String namaUser;
   final String role;
@@ -18,37 +18,42 @@ class LogAktivitasModel {
     required this.alat,
     required this.unit,
   });
-}
 
-final List<LogAktivitasModel> logDummy = [
-  LogAktivitasModel(
-    aksi: 'Approve',
-    kategori: 'Peminjaman',
-    deskripsi: 'Menyetujui peminjaman Macbook Pro oleh Siti Aminah',
-    namaUser: 'Siti Aminah',
-    role: 'Petugas',
-    tanggal: '12 Oktober 2025',
-    alat: 'Macbook Pro',
-    unit: 'Unit: LPT-001-U1',
-  ),
-  LogAktivitasModel(
-    aksi: 'Create',
-    kategori: 'Peminjaman',
-    deskripsi: 'Mengajukan peminjaman Arduino untuk praktikum IoT',
-    namaUser: 'Siti Aminah',
-    role: 'Peminjam',
-    tanggal: '12 Oktober 2025',
-    alat: 'Arduino',
-    unit: 'Unit: LPT-002-A1',
-  ),
-  LogAktivitasModel(
-    aksi: 'Update',
-    kategori: 'Alat',
-    deskripsi: 'Memperbarui jumlah stok Proyektor',
-    namaUser: 'Erlynda',
-    role: 'Admin',
-    tanggal: '12 Oktober 2025',
-    alat: 'Proyektor',
-    unit: 'Unit: LPT-001-P1',
-  ),
-];
+  factory LogAktivitasModel.fromMap(Map<String, dynamic> map) {
+    // Mengambil data user dari join
+    final userData = map['users'] ?? {};
+    
+    // Mengambil data unit & alat dari join log_aktivitas_alat
+    // Kita ambil data pertama jika ada
+    final logAlat = (map['log_aktivitas_alat'] as List).isNotEmpty 
+        ? map['log_aktivitas_alat'][0] 
+        : null;
+    
+    final unitData = logAlat?['alat_unit'] ?? {};
+    final alatData = unitData['alat'] ?? {};
+
+    return LogAktivitasModel(
+      aksi: map['aksi'] ?? '-',
+      kategori: map['entitas'] ?? '-', // Di DB kolomnya 'entitas'
+      deskripsi: map['deskripsi'] ?? '-',
+      namaUser: userData['nama'] ?? 'System',
+      role: userData['role'] ?? '-',
+      tanggal: map['created_at'] != null 
+          ? _formatTanggal(map['created_at']) 
+          : '-',
+      alat: alatData['nama_alat'] ?? 'Tidak ada alat',
+      unit: unitData['kode_unit'] != null 
+          ? 'Unit: ${unitData['kode_unit']}' 
+          : 'Unit: -',
+    );
+  }
+
+  static String _formatTanggal(String raw) {
+    DateTime dt = DateTime.parse(raw).toLocal();
+    List<String> bulan = [
+      "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    return "${dt.day} ${bulan[dt.month]} ${dt.year}";
+  }
+}
