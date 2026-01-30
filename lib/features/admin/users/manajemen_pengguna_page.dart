@@ -21,49 +21,69 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
   String _selectedRoleFilter = "Semua Role";
   final _supabase = Supabase.instance.client;
 
+  // Di ManajemenPenggunaPage
   void _openUserForm({UserModel? user}) {
-    showDialog(
-      context: context,
-      builder: (context) => UserFormModal(
-        user: user,
-        onSave: (data) async {
-          try {
-            if (user != null) {
-              // --- 1. PROSES UPDATE (Untuk user yang sudah ada) ---
-              await _supabase
-                  .from('users')
-                  .update({
-                    'nama': data['name'],
-                    'role': data['role'].toString().toLowerCase(),
-                  })
-                  .eq('id_user', user.idUser);
+  showDialog(
+    context: context,
+    builder: (context) => UserFormModal(
+      user: user,
+      onSave: (data) async {
+        try {
+          final String roleLower = data['role'].toString().toLowerCase();
+          final String emailBaru = data['email'];
 
-              _showSnackBar("Data pengguna berhasil diperbarui", Colors.green);
-            } else {
-              final AuthResponse res = await _supabase.auth.signUp(
-                email: data['email'],
-                password: data['password'],
-                data: {
-                  'nama': data['name'],
-                  'role': data['role'],
-                },
-              );
+          if (user != null) {
+            // === MODE EDIT ===
+            
+            // 1. Update Email di Supabase Auth (WAJIB)
+            // Ini yang mengubah data di tabel internal auth.users
+            await _supabase.auth.updateUser(
+              UserAttributes(email: emailBaru),
+            );
 
-              if (res.user != null) {
-                _showSnackBar(
-                  "Pengguna berhasil didaftarkan otomatis!",
-                  Colors.green,
-                );
-              }
+            // 2. Update Data di Tabel public.users
+            await _supabase
+                .from('users')
+                .update({
+                  'nama': data['nama'],
+                  'email': emailBaru, // Supaya email di tabel kita juga update
+                  'role': roleLower,
+                })
+                .eq('id_user', user.idUser);
+
+            _showSnackBar("Berhasil memperbarui data & email!", Colors.green);
+          } else {
+            // === MODE TAMBAH BARU ===
+            
+            // 1. SignUp ke Auth
+            final AuthResponse res = await _supabase.auth.signUp(
+              email: emailBaru,
+              password: data['password'],
+              data: {'nama': data['nama'], 'role': roleLower},
+            );
+
+            final String? newAuthId = res.user?.id;
+
+            // 2. Insert/Upsert ke Tabel public.users
+            if (newAuthId != null) {
+              await _supabase.from('users').upsert({
+                'auth_user_id': newAuthId,
+                'nama': data['nama'],
+                'email': emailBaru,
+                'role': roleLower,
+              }, onConflict: 'auth_user_id');
+              _showSnackBar("Pengguna baru ditambahkan!", Colors.green);
             }
-          } catch (e) {
-            // Menangani error seperti email duplikat atau koneksi
-            _showSnackBar("Gagal memproses: $e", Colors.red);
           }
-        },
-      ),
-    );
-  }
+        } catch (e) {
+          // Jika error "Email change requires confirmation", 
+          // berarti setting di dashboard Supabase belum benar-benar mati.
+          _showSnackBar("Gagal: $e", Colors.red);
+        }
+      },
+    ),
+  );
+}
 
   void _showSnackBar(String msg, Color color) {
     if (!mounted) return;

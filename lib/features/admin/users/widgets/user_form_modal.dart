@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/model.dart';
 
-
 class UserFormModal extends StatefulWidget {
   final UserModel? user;
   // Ubah parameter onSave dari UserModel menjadi Map
@@ -37,8 +36,12 @@ class _UserFormModalState extends State<UserFormModal> {
       backgroundColor: Colors.transparent,
       content: Container(
         width: MediaQuery.of(context).size.width * 0.9,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-        child: SingleChildScrollView( // Tambahkan scroll agar aman saat keyboard muncul
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: SingleChildScrollView(
+          // Tambahkan scroll agar aman saat keyboard muncul
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -53,14 +56,18 @@ class _UserFormModalState extends State<UserFormModal> {
                     const SizedBox(height: 12),
                     _label("Email *"),
                     _textField(emailController, "baskara@brantas.sch.id"),
-                    
+
                     // Input Password hanya muncul saat Tambah Pengguna Baru
                     if (!isEdit) ...[
                       const SizedBox(height: 12),
                       _label("Password *"),
-                      _textField(passwordController, "Minimal 6 karakter", isPassword: true),
+                      _textField(
+                        passwordController,
+                        "Minimal 6 karakter",
+                        isPassword: true,
+                      ),
                     ],
-                    
+
                     const SizedBox(height: 12),
                     _label("Role"),
                     _dropdownRole(),
@@ -82,26 +89,51 @@ class _UserFormModalState extends State<UserFormModal> {
         Expanded(
           child: OutlinedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal", style: TextStyle(color: Color.fromRGBO(62, 159, 127, 1), fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Batal",
+              style: TextStyle(
+                color: Color.fromRGBO(62, 159, 127, 1),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: ElevatedButton(
+            // Di UserFormModal - Bagian onPressed tombol simpan/tambah
             onPressed: () {
-              if (nameController.text.isNotEmpty && emailController.text.isNotEmpty) {
-                // Kirim data Map ke Page Utama
+              if (nameController.text.isNotEmpty &&
+                  emailController.text.isNotEmpty) {
+                // Validasi password jika tambah baru
+                if (widget.user == null && passwordController.text.length < 6) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Password minimal 6 karakter"),
+                    ),
+                  );
+                  return;
+                }
+
                 widget.onSave({
                   'nama': nameController.text,
                   'email': emailController.text,
-                  'password': passwordController.text,
-                  'role': selectedRole == "Pilih Role" ? " " : selectedRole.toLowerCase(),
+                  'password': passwordController.text, // WAJIB DIKIRIM
+                  'role': selectedRole,
                 });
                 Navigator.pop(context);
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(62, 159, 127, 1)),
-            child: Text(isEdit ? "Simpan" : "Tambah", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
+            ),
+            child: Text(
+              isEdit ? "Simpan" : "Tambah",
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
       ],
@@ -113,16 +145,31 @@ class _UserFormModalState extends State<UserFormModal> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
         color: Color.fromRGBO(62, 159, 127, 1),
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
       ),
       child: Row(
         children: [
-          Icon(isEdit ? Icons.edit_square : Icons.add_circle, color: Colors.white, size: 20),
+          Icon(
+            isEdit ? Icons.edit_square : Icons.add_circle,
+            color: Colors.white,
+            size: 20,
+          ),
           const SizedBox(width: 8),
-          Text(isEdit ? "Edit Pengguna" : "Tambah Pengguna",
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(
+            isEdit ? "Edit Pengguna" : "Tambah Pengguna",
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const Spacer(),
-          GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.close, color: Colors.white, size: 20)),
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.close, color: Colors.white, size: 20),
+          ),
         ],
       ),
     );
@@ -131,38 +178,73 @@ class _UserFormModalState extends State<UserFormModal> {
   // --- Helper Form Widgets (pindahkan helper methods ke sini) ---
   Widget _label(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 6),
-    child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+    ),
   );
 
-  Widget _textField(TextEditingController ctrl, String hint, {bool isPassword = false}) {
+  Widget _textField(
+    TextEditingController ctrl,
+    String hint, {
+    bool isPassword = false,
+  }) {
     return TextField(
       controller: ctrl,
       obscureText: isPassword,
       decoration: InputDecoration(
         hintText: hint,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color.fromRGBO(62, 159, 127, 1))),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color.fromRGBO(62, 159, 127, 1)),
+        ),
       ),
     );
   }
 
   Widget _dropdownRole() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedRole == "Pilih Role" ? null : selectedRole,
-          hint: Text(selectedRole, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-          isExpanded: true,
-          items: ['Admin', 'Petugas', 'Peminjam'].map((val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
-          onChanged: (val) => setState(() => selectedRole = val!),
+  // Pastikan value yang dikirim ke Dropdown disesuaikan formatnya
+  // Kita buat daftar role yang konsisten (huruf kapital di tampilan, kecil di value)
+  final List<String> roleOptions = ['admin', 'petugas', 'peminjam'];
+
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    decoration: BoxDecoration(
+      border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        // Pakai toLowerCase() supaya matching dengan daftar roleOptions
+        value: (selectedRole == "Pilih Role" || selectedRole.isEmpty) 
+               ? null 
+               : selectedRole.toLowerCase(),
+        hint: const Text(
+          "Pilih Role",
+          style: TextStyle(fontSize: 13, color: Colors.grey),
         ),
+        isExpanded: true,
+        items: roleOptions.map((val) {
+          return DropdownMenuItem(
+            value: val, // ini 'admin' (kecil)
+            child: Text(val[0].toUpperCase() + val.substring(1)), // ini 'Admin' (Tampilan saja yang besar)
+          );
+        }).toList(),
+        onChanged: (val) {
+          setState(() {
+            selectedRole = val!;
+          });
+        },
       ),
-    );
-  }
+    ),
+  );
+}
 }

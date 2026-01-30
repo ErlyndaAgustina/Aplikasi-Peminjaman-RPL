@@ -175,14 +175,15 @@ class UserCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
+                // Di UserCard
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      onDelete(user); // Panggil fungsi hapus
+                      Navigator.pop(context); // Tutup dialog
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
                     ),
                     child: const Text(
                       "Hapus",
@@ -197,5 +198,4 @@ class UserCard extends StatelessWidget {
       ),
     );
   }
-
 }

@@ -8,11 +8,11 @@ class RoleBadge extends StatelessWidget {
 
   Color get bgColor {
     switch (role) {
-      case 'Admin':
+      case 'admin':
         return const Color.fromRGBO(217, 253, 240, 1);
-      case 'Petugas':
+      case 'petugas':
         return const Color.fromRGBO(219, 234, 254, 1);
-      case 'Peminjam':
+      case 'peminjam':
         return const Color.fromRGBO(255, 237, 213, 1);
       default:
         return const Color(0xFFFFEFE5);
@@ -21,11 +21,11 @@ class RoleBadge extends StatelessWidget {
 
   Color get textColor {
     switch (role) {
-      case 'Admin':
+      case 'admin':
         return const Color.fromRGBO(1, 85, 56, 1);
-      case 'Petugas':
+      case 'petugas':
         return const Color.fromRGBO(37, 99, 235, 1);
-      case 'Peminjam':
+      case 'peminjam':
         return const Color.fromRGBO(235, 98, 26, 1);
       default:
         return const Color(0xFFEF6C00);
