@@ -12,7 +12,8 @@ class ManajemenPeminjamanPage extends StatefulWidget {
   const ManajemenPeminjamanPage({super.key});
 
   @override
-  State<ManajemenPeminjamanPage> createState() => _ManajemenPeminjamanPageState();
+  State<ManajemenPeminjamanPage> createState() =>
+      _ManajemenPeminjamanPageState();
 }
 
 class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
@@ -29,18 +30,25 @@ class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
     _fetchData();
   }
 
+  
+
   Future<void> _fetchData() async {
     try {
       // Ambil data peminjaman JOIN dengan users untuk dapat nama
       final response = await supabase
           .from('peminjaman')
           .select('*, users(nama)')
-          .or('status.eq.dipinjam,status.eq.terlambat') // Filter status sesuai request
+          .or(
+            'status.eq.dipinjam,status.eq.terlambat',
+          ) // Filter status sesuai request
+          
           .order('tanggal_pinjam', ascending: false);
 
       final List data = response;
       setState(() {
-        allData = data.map((item) => PeminjamanModel.fromSupabase(item)).toList();
+        allData = data
+            .map((item) => PeminjamanModel.fromSupabase(item))
+            .toList();
         _applyFilter();
         isLoading = false;
       });
@@ -53,11 +61,20 @@ class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
   void _applyFilter() {
     setState(() {
       filteredList = allData.where((p) {
-        final matchesSearch = p.nama.toLowerCase().contains(searchQuery.toLowerCase()) || 
-                              p.kode.toLowerCase().contains(searchQuery.toLowerCase());
-        
-        final matchesFilter = (filterStatus == "Semua Status") || (p.status == filterStatus);
-        
+        // 1. Logika Search
+        final matchesSearch =
+            p.nama.toLowerCase().contains(searchQuery.toLowerCase()) ||
+            p.kode.toLowerCase().contains(searchQuery.toLowerCase());
+
+        // 2. Logika Filter Status (Samakan ke lowercase untuk jaga-jaga)
+        final bool matchesFilter;
+        if (filterStatus == "Semua Status") {
+          matchesFilter = true;
+        } else {
+          // Bandingkan status data dengan status filter (keduanya jadikan kecil)
+          matchesFilter = p.status.toLowerCase() == filterStatus.toLowerCase();
+        }
+
         return matchesSearch && matchesFilter;
       }).toList();
     });
@@ -94,7 +111,10 @@ class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
                   child: Builder(
                     builder: (context) => GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
-                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                      child: Icon(
+                        Icons.menu,
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
                     ),
                   ),
                 ),
@@ -184,11 +204,17 @@ class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
                   fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1), width: 1.2),
+                    borderSide: const BorderSide(
+                      color: Color.fromRGBO(205, 238, 226, 1),
+                      width: 1.2,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color.fromRGBO(72, 141, 117, 1), width: 1.5),
+                    borderSide: const BorderSide(
+                      color: Color.fromRGBO(72, 141, 117, 1),
+                      width: 1.5,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -197,10 +223,14 @@ class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
             const SizedBox(height: 10),
 
             // KATEGORI FILTER (Sudah diperbaiki panggilannya)
+            // Di ManajemenPeminjamanPage
             KategoriFilter(
               onStatusChanged: (status) {
-                filterStatus = status;
-                _applyFilter(); // Memanggil fungsi filter saat status dipilih
+                setState(() {
+                  filterStatus =
+                      status; // Akan menerima 'dipinjam' atau 'terlambat'
+                });
+                _applyFilter();
               },
             ),
 
@@ -208,23 +238,28 @@ class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
 
             // LISTVIEW (Sudah ganti ke .length)
             Expanded(
-      child: isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color.fromRGBO(62, 159, 127, 1)))
-        : RefreshIndicator(
-            onRefresh: _fetchData, // Swipe down untuk refresh data
-            child: filteredList.isEmpty 
-              ? const Center(child: Text("Data tidak ditemukan"))
-              : ListView.builder(
-                  itemCount: filteredList.length,
-                  itemBuilder: (context, index) {
-                    return PeminjamanCard(
-                      data: filteredList[index], 
-                      onChanged: _fetchData // Kirim callback untuk refresh setelah edit/hapus
-                    );
-                  },
-                ),
-          ),
-            )
+              child: isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _fetchData, // Swipe down untuk refresh data
+                      child: filteredList.isEmpty
+                          ? const Center(child: Text("Data tidak ditemukan"))
+                          : ListView.builder(
+                              itemCount: filteredList.length,
+                              itemBuilder: (context, index) {
+                                return PeminjamanCard(
+                                  data: filteredList[index],
+                                  onChanged:
+                                      _fetchData, // Kirim callback untuk refresh setelah edit/hapus
+                                );
+                              },
+                            ),
+                    ),
+            ),
           ],
         ),
       ),

@@ -31,11 +31,12 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color.fromRGBO(205, 238, 226, 1)),
+        border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // BARIS 1: Nama dan Status
           Row(
             children: [
               Expanded(
@@ -53,6 +54,8 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
             ],
           ),
           const SizedBox(height: 2),
+          
+          // Kode Peminjaman
           Text(
             widget.data.kode,
             style: const TextStyle(
@@ -63,6 +66,8 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
             ),
           ),
           const SizedBox(height: 15),
+
+          // BARIS: Tanggal dan Jam
           Row(
             children: [
               const Icon(Icons.calendar_today, size: 14),
@@ -74,20 +79,15 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
               Text(
                 "Jam ${widget.data.jam}",
                 style: const TextStyle(fontSize: 12),
-              ), // Tampilan: Jam 1 - 5
+              ),
             ],
           ),
-
           const SizedBox(height: 8),
 
-          // BARIS 2: Batas Kembali (Warna Orange)
+          // BARIS: Batas Kembali
           Row(
             children: [
-              const Icon(
-                Icons.edit_calendar,
-                size: 16,
-                color: Colors.orange,
-              ),
+              const Icon(Icons.edit_calendar, size: 16, color: Colors.orange),
               const SizedBox(width: 6),
               Text(
                 "Batas: ${widget.data.batasKembali}",
@@ -99,15 +99,13 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
               ),
             ],
           ),
+
+          // Warning Terlambat
           if (widget.data.status.toLowerCase() == 'terlambat') ...[
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  size: 16,
-                  color: Colors.red,
-                ),
+                const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red),
                 const SizedBox(width: 6),
                 Text(
                   "Terlambat ${widget.data.durasiTerlambat} hari",
@@ -121,10 +119,11 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
             ),
           ],
           const SizedBox(height: 10),
+
+          // TOMBOL AKSI (View, Edit, Delete)
           Row(
             children: [
               const Spacer(),
-
               _iconBtn(
                 Icons.visibility,
                 const Color.fromRGBO(236, 254, 248, 1),
@@ -141,13 +140,12 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
                 Icons.edit,
                 const Color.fromRGBO(236, 254, 248, 1),
                 iconColor: const Color.fromRGBO(93, 93, 93, 1),
-                onTap: () {
-                  showDialog(
+                onTap: () async {
+                  final result = await showDialog(
                     context: context,
-                    barrierColor: Colors.black54,
-                    builder: (context) =>
-                        EditPeminjamanDialog(data: widget.data),
+                    builder: (context) => EditPeminjamanDialog(data: widget.data),
                   );
+                  if (result == true) widget.onChanged();
                 },
               ),
               const SizedBox(width: 6),
@@ -158,21 +156,15 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
                 onTap: () async {
                   final confirmed = await showDialog<bool>(
                     context: context,
-                    builder: (context) => HapusPeminjamanDialog(
-                      namaPeminjam: widget.data.nama, // TAMBAHKAN WIDGET.
-                    ),
+                    builder: (context) => HapusPeminjamanDialog(namaPeminjam: widget.data.nama),
                   );
 
                   if (confirmed == true) {
                     await Supabase.instance.client
                         .from('peminjaman')
                         .delete()
-                        .eq(
-                          'id_peminjaman',
-                          widget.data.id,
-                        ); // TAMBAHKAN WIDGET.
-
-                    widget.onChanged(); // TAMBAHKAN WIDGET.
+                        .eq('id_peminjaman', widget.data.id);
+                    widget.onChanged();
                   }
                 },
               ),
@@ -183,21 +175,13 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
     );
   }
 
-  Widget _iconBtn(
-    IconData icon,
-    Color bg, {
-    Color iconColor = Colors.black,
-    VoidCallback? onTap,
-  }) {
+  Widget _iconBtn(IconData icon, Color bg, {Color iconColor = Colors.black, VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
         child: Icon(icon, size: 16, color: iconColor),
       ),
     );
