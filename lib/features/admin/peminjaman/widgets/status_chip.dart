@@ -6,9 +6,9 @@ class StatusChip extends StatelessWidget {
 
   Color get bg {
     switch (status) {
-      case 'Dipinjam':
+      case 'dipinjam':
         return const Color.fromRGBO(219, 234, 254, 1);
-      case 'Terlambat':
+      case 'terlambat':
         return const Color.fromRGBO(255, 225, 225, 1);
       default:
         return const Color(0xFFE6F4EA);
@@ -17,9 +17,9 @@ class StatusChip extends StatelessWidget {
 
   Color get fg {
     switch (status) {
-      case 'Dipinjam':
+      case 'dipinjam':
         return const Color.fromRGBO(37, 99, 235, 1);
-      case 'Terlambat':
+      case 'terlambat':
         return Color.fromRGBO(255, 2, 2, 1);
       default:
         return const Color(0xFF2E7D32);

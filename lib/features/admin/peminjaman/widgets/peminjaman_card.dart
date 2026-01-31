@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../detail_peminjaman/detail_peminjaman_page.dart';
 import 'edit_peminjaman_dialog.dart';
 import 'hapus_peminjaman_dialog.dart';
@@ -9,7 +10,13 @@ const String roboto = 'Roboto';
 
 class PeminjamanCard extends StatefulWidget {
   final PeminjamanModel data;
-  const PeminjamanCard({super.key, required this.data});
+  final VoidCallback onChanged;
+
+  const PeminjamanCard({
+    super.key,
+    required this.data,
+    required this.onChanged,
+  });
 
   @override
   State<PeminjamanCard> createState() => _PeminjamanCardState();
@@ -60,35 +67,54 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
             children: [
               const Icon(Icons.calendar_today, size: 14),
               const SizedBox(width: 6),
-              Text(
-                widget.data.tanggal,
-                style: const TextStyle(fontSize: 12, fontFamily: roboto),
-              ),
-              const SizedBox(width: 50),
+              Text(widget.data.tanggal, style: const TextStyle(fontSize: 12)),
+              const SizedBox(width: 40),
               const Icon(Icons.schedule, size: 14),
               const SizedBox(width: 6),
               Text(
-                widget.data.jam,
-                style: const TextStyle(fontSize: 12, fontFamily: roboto),
+                "Jam ${widget.data.jam}",
+                style: const TextStyle(fontSize: 12),
+              ), // Tampilan: Jam 1 - 5
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // BARIS 2: Batas Kembali (Warna Orange)
+          Row(
+            children: [
+              const Icon(
+                Icons.edit_calendar,
+                size: 16,
+                color: Colors.orange,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                "Batas: ${widget.data.batasKembali}",
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
-          if (widget.data.catatan != null) ...[
-            const SizedBox(height: 6),
+          if (widget.data.status.toLowerCase() == 'terlambat') ...[
+            const SizedBox(height: 8),
             Row(
               children: [
                 const Icon(
                   Icons.warning_amber_rounded,
-                  size: 14,
-                  color: Color.fromRGBO(255, 2, 2, 1),
+                  size: 16,
+                  color: Colors.red,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  widget.data.catatan!,
+                  "Terlambat ${widget.data.durasiTerlambat} hari",
                   style: const TextStyle(
-                    fontFamily: roboto,
                     fontSize: 12,
-                    color: Color.fromRGBO(255, 2, 2, 1),
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -104,11 +130,11 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
                 const Color.fromRGBO(236, 254, 248, 1),
                 iconColor: const Color.fromRGBO(93, 93, 93, 1),
                 onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => DetailPeminjamanPage()),
-                      );
-                    },
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => DetailPeminjamanPage()),
+                  );
+                },
               ),
               const SizedBox(width: 6),
               _iconBtn(
@@ -116,29 +142,39 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
                 const Color.fromRGBO(236, 254, 248, 1),
                 iconColor: const Color.fromRGBO(93, 93, 93, 1),
                 onTap: () {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (context) => EditPeminjamanDialog(data: widget.data),
-    );
-  }
+                  showDialog(
+                    context: context,
+                    barrierColor: Colors.black54,
+                    builder: (context) =>
+                        EditPeminjamanDialog(data: widget.data),
+                  );
+                },
               ),
               const SizedBox(width: 6),
               _iconBtn(
                 Icons.delete,
                 const Color.fromRGBO(255, 119, 119, 0.22),
                 iconColor: const Color.fromRGBO(255, 2, 2, 1),
-                onTap: () {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (context) => HapusPeminjamanDialog(namaPeminjam: widget.data.nama),
-    ).then((confirmed) {
-       if(confirmed == true) {
-         // Jalankan fungsi hapus di sini kecillll
-       }
-    });
-  }
+                onTap: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => HapusPeminjamanDialog(
+                      namaPeminjam: widget.data.nama, // TAMBAHKAN WIDGET.
+                    ),
+                  );
+
+                  if (confirmed == true) {
+                    await Supabase.instance.client
+                        .from('peminjaman')
+                        .delete()
+                        .eq(
+                          'id_peminjaman',
+                          widget.data.id,
+                        ); // TAMBAHKAN WIDGET.
+
+                    widget.onChanged(); // TAMBAHKAN WIDGET.
+                  }
+                },
               ),
             ],
           ),

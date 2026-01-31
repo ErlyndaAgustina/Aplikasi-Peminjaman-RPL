@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../../auth/login_page.dart';
 import '../cetak_laporan/cetak_laporan_page.dart';
 import '../dashboard/dashboard_page.dart';
@@ -9,7 +8,6 @@ import '../persetujuan_pengembalian/persetujuan_pengembalian_page.dart';
 
 class SidebarPetugasDrawer extends StatefulWidget {
   const SidebarPetugasDrawer({super.key});
-
   static const String roboto = 'Roboto';
 
   @override
@@ -17,16 +15,59 @@ class SidebarPetugasDrawer extends StatefulWidget {
 }
 
 class _SidebarPetugasDrawerState extends State<SidebarPetugasDrawer> {
-  static const String roboto = SidebarPetugasDrawer.roboto;
+  final _supabase = Supabase.instance.client;
+  String _userName = "Loading...";
+  String _userEmail = "...";
+  String _initials = "??";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Fungsi untuk ambil data dari Supabase
+  Future<void> _loadUserData() async {
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      try {
+        // Ambil data detail dari tabel public.users
+        final userData = await _supabase
+            .from('users')
+            .select('nama, email')
+            .eq('auth_user_id', user.id)
+            .single();
+
+        setState(() {
+          _userName = userData['nama'] ?? "Petugas";
+          _userEmail = userData['email'] ?? user.email ?? "-";
+
+          // Buat inisial (Contoh: Budi Santoso -> BS)
+          List<String> names = _userName.split(" ");
+          _initials = names.length > 1
+              ? "${names[0][0]}${names[1][0]}".toUpperCase()
+              : _userName.substring(0, 1).toUpperCase();
+        });
+      } catch (e) {
+        setState(() {
+          _userName = "Petugas";
+          _userEmail = user.email ?? "-";
+          _initials = "P";
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    const String roboto = SidebarPetugasDrawer.roboto;
+
     return Drawer(
       backgroundColor: Colors.white,
       child: SafeArea(
         child: Column(
           children: [
-            // Header dengan X button
+            // Header Dinamis
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -35,7 +76,7 @@ class _SidebarPetugasDrawerState extends State<SidebarPetugasDrawer> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Avatar Petugas
+                      // Avatar dengan Inisial Dinamis
                       Container(
                         width: 50,
                         height: 50,
@@ -43,10 +84,10 @@ class _SidebarPetugasDrawerState extends State<SidebarPetugasDrawer> {
                           color: Color.fromRGBO(219, 234, 254, 1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            'PS',
-                            style: TextStyle(
+                            _initials,
+                            style: const TextStyle(
                               fontFamily: roboto,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -59,9 +100,9 @@ class _SidebarPetugasDrawerState extends State<SidebarPetugasDrawer> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Petugas',
-                            style: TextStyle(
+                          Text(
+                            _userName,
+                            style: const TextStyle(
                               fontFamily: roboto,
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
@@ -69,22 +110,23 @@ class _SidebarPetugasDrawerState extends State<SidebarPetugasDrawer> {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'Petugas@brantas.sch.id',
-                            style: TextStyle(
+                          Text(
+                            _userEmail,
+                            style: const TextStyle(
                               fontFamily: roboto,
                               fontSize: 12,
                               color: Color.fromRGBO(72, 141, 117, 1),
                             ),
                           ),
                           const SizedBox(height: 4),
+                          // Label Role Tetap Petugas
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Color.fromRGBO(219, 234, 254, 1),
+                              color: const Color.fromRGBO(219, 234, 254, 1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
@@ -256,98 +298,94 @@ class _SidebarPetugasDrawerState extends State<SidebarPetugasDrawer> {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          fontFamily: roboto,
+        style: TextStyle(
+          fontFamily: SidebarPetugasDrawer.roboto,
           fontSize: 14,
           fontWeight: FontWeight.w800,
-          color: Color.fromRGBO(72, 141, 117, 1),
+          color: const Color.fromRGBO(72, 141, 117, 1),
         ),
       ),
       onTap: onTap,
       dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      horizontalTitleGap: 12,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      horizontalTitleGap: 8,
     );
   }
 
   void _showLogoutDialog() {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (dialogContext) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      title: const Text(
-        'Konfirmasi Logout',
-        style: TextStyle(
-          fontFamily: roboto,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      content: const Text(
-        'Apakah Anda yakin ingin keluar?',
-        style: TextStyle(fontFamily: roboto, fontSize: 14),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text(
-            'Batal',
-            style: TextStyle(fontFamily: roboto, color: Colors.grey),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Konfirmasi Logout',
+          style: TextStyle(
+            fontFamily: SidebarPetugasDrawer.roboto,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        ElevatedButton(
-          onPressed: () async {
-            try {
-              print('Starting logout...');
-              
-              // ✅ PENTING: Simpan navigator SEBELUM menutup dialog/drawer
-              final navigator = Navigator.of(context, rootNavigator: true);
-              
-              // Tutup dialog dan drawer sekaligus
-              Navigator.pop(dialogContext); // tutup dialog
-              Navigator.pop(context); // tutup drawer
-              
-              // Tunggu sebentar agar UI selesai update
-              await Future.delayed(const Duration(milliseconds: 300));
-              
-              // Lakukan logout
-              await Supabase.instance.client.auth.signOut();
-              print('Logout complete');
-              
-              // Tunggu sebentar lagi
-              await Future.delayed(const Duration(milliseconds: 100));
-              
-              print('Navigating to login...');
-              
-              // Navigate ke login menggunakan navigator yang sudah disimpan
-              navigator.pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const LoginPage(),
-                ),
-                (route) => false,
-              );
-              
-              print('Navigation complete');
-            } catch (e) {
-              print('Error during logout: $e');
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color.fromRGBO(220, 38, 38, 1),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        content: const Text(
+          'Apakah Anda yakin ingin keluar?',
+          style: TextStyle(fontFamily: SidebarPetugasDrawer.roboto, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Batal',
+              style: TextStyle(fontFamily: SidebarPetugasDrawer.roboto, color: Colors.grey),
             ),
           ),
-          child: const Text(
-            'Ya, Logout',
-            style: TextStyle(fontFamily: roboto, color: Colors.white),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                print('Starting logout...');
+
+                // ✅ PENTING: Simpan navigator SEBELUM menutup dialog/drawer
+                final navigator = Navigator.of(context, rootNavigator: true);
+
+                // Tutup dialog dan drawer sekaligus
+                Navigator.pop(dialogContext); // tutup dialog
+                Navigator.pop(context); // tutup drawer
+
+                // Tunggu sebentar agar UI selesai update
+                await Future.delayed(const Duration(milliseconds: 300));
+
+                // Lakukan logout
+                await Supabase.instance.client.auth.signOut();
+                print('Logout complete');
+
+                // Tunggu sebentar lagi
+                await Future.delayed(const Duration(milliseconds: 100));
+
+                print('Navigating to login...');
+
+                // Navigate ke login menggunakan navigator yang sudah disimpan
+                navigator.pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  (route) => false,
+                );
+
+                print('Navigation complete');
+              } catch (e) {
+                print('Error during logout: $e');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromRGBO(220, 38, 38, 1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Ya, Logout',
+              style: TextStyle(fontFamily: SidebarPetugasDrawer.roboto, color: Colors.white),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 }

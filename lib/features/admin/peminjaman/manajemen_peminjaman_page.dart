@@ -4,6 +4,7 @@ import '../peminjaman/widgets/filter.dart';
 import 'models/models.dart';
 import '../peminjaman/widgets/peminjaman_card.dart';
 import '../sidebar/sidebar_admin.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 const String roboto = 'Roboto';
 
@@ -15,22 +16,43 @@ class ManajemenPeminjamanPage extends StatefulWidget {
 }
 
 class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
-  // 1. Inisialisasi variabel state
+  final supabase = Supabase.instance.client;
+  List<PeminjamanModel> allData = [];
   List<PeminjamanModel> filteredList = [];
   String searchQuery = "";
   String filterStatus = "Semua Status";
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Isi list pertama kali dengan semua data
-    filteredList = peminjamanList;
+    _fetchData();
   }
 
-  // 2. Fungsi Logika Filter & Search
+  Future<void> _fetchData() async {
+    try {
+      // Ambil data peminjaman JOIN dengan users untuk dapat nama
+      final response = await supabase
+          .from('peminjaman')
+          .select('*, users(nama)')
+          .or('status.eq.dipinjam,status.eq.terlambat') // Filter status sesuai request
+          .order('tanggal_pinjam', ascending: false);
+
+      final List data = response;
+      setState(() {
+        allData = data.map((item) => PeminjamanModel.fromSupabase(item)).toList();
+        _applyFilter();
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetch: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
   void _applyFilter() {
     setState(() {
-      filteredList = peminjamanList.where((p) {
+      filteredList = allData.where((p) {
         final matchesSearch = p.nama.toLowerCase().contains(searchQuery.toLowerCase()) || 
                               p.kode.toLowerCase().contains(searchQuery.toLowerCase());
         
@@ -186,19 +208,22 @@ class _ManajemenPeminjamanPageState extends State<ManajemenPeminjamanPage> {
 
             // LISTVIEW (Sudah ganti ke .length)
             Expanded(
-              child: filteredList.isEmpty 
-                ? const Center(
-                    child: Text(
-                      "Data tidak ditemukan",
-                      style: TextStyle(fontFamily: roboto, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: filteredList.length, // PAKAI .length YA KECILLLL
-                    itemBuilder: (context, index) {
-                      return PeminjamanCard(data: filteredList[index]);
-                    },
-                  ),
+      child: isLoading 
+        ? const Center(child: CircularProgressIndicator(color: Color.fromRGBO(62, 159, 127, 1)))
+        : RefreshIndicator(
+            onRefresh: _fetchData, // Swipe down untuk refresh data
+            child: filteredList.isEmpty 
+              ? const Center(child: Text("Data tidak ditemukan"))
+              : ListView.builder(
+                  itemCount: filteredList.length,
+                  itemBuilder: (context, index) {
+                    return PeminjamanCard(
+                      data: filteredList[index], 
+                      onChanged: _fetchData // Kirim callback untuk refresh setelah edit/hapus
+                    );
+                  },
+                ),
+          ),
             )
           ],
         ),

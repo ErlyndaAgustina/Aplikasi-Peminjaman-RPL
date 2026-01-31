@@ -5,24 +5,72 @@ import '../ajukan_pengembalian/ajukan_pengembalian_page.dart';
 import '../daftar_alat/daftar_alat_peminjam_page.dart';
 import '../dashboard/dashboard_page.dart';
 
-const String roboto = 'Roboto';
-
 class SidebarPeminjamDrawer extends StatefulWidget {
   const SidebarPeminjamDrawer({super.key});
+  static const String roboto = 'Roboto';
 
   @override
   State<SidebarPeminjamDrawer> createState() => _SidebarPeminjamDrawerState();
 }
 
 class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
+  final _supabase = Supabase.instance.client;
+  String _userName = "Loading...";
+  String _userEmail = "...";
+  String _initials = "??";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Fungsi untuk mengambil data peminjam dari Supabase
+  Future<void> _loadUserData() async {
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      try {
+        // Ambil data detail dari tabel public.users
+        final userData = await _supabase
+            .from('users')
+            .select('nama, email')
+            .eq('auth_user_id', user.id)
+            .single();
+
+        setState(() {
+          _userName = userData['nama'] ?? "Siswa";
+          _userEmail = userData['email'] ?? user.email ?? "-";
+
+          // Logika Inisial: "Andi Pratama" -> "AP"
+          List<String> names = _userName.trim().split(" ");
+          if (names.length > 1) {
+            _initials = "${names[0][0]}${names[1][0]}".toUpperCase();
+          } else {
+            _initials = _userName.length >= 2
+                ? _userName.substring(0, 2).toUpperCase()
+                : _userName[0].toUpperCase();
+          }
+        });
+      } catch (e) {
+        setState(() {
+          _userName = "Peminjam";
+          _userEmail = user.email ?? "-";
+          _initials = "PM";
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    const String roboto = SidebarPeminjamDrawer.roboto;
+
     return Drawer(
       backgroundColor: Colors.white,
       child: SafeArea(
         child: Column(
           children: [
-            // Header dengan X button
+            // Header Dinamis
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -31,7 +79,7 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Avatar Siswa
+                      // Avatar Siswa Dinamis
                       Container(
                         width: 50,
                         height: 50,
@@ -39,10 +87,10 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
                           color: Color.fromRGBO(255, 237, 213, 1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            'SW',
-                            style: TextStyle(
+                            _initials,
+                            style: const TextStyle(
                               fontFamily: roboto,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -55,9 +103,9 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Siswa',
-                            style: TextStyle(
+                          Text(
+                            _userName,
+                            style: const TextStyle(
                               fontFamily: roboto,
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
@@ -65,9 +113,9 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'siswa@brantas.sch.id',
-                            style: TextStyle(
+                          Text(
+                            _userEmail,
+                            style: const TextStyle(
                               fontFamily: roboto,
                               fontSize: 12,
                               color: Color.fromRGBO(72, 141, 117, 1),
@@ -80,7 +128,7 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Color.fromRGBO(255, 237, 213, 1),
+                              color: const Color.fromRGBO(255, 237, 213, 1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
@@ -97,16 +145,12 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
                       ),
                     ],
                   ),
-                  // Close button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      child: const Icon(
-                        Icons.close,
-                        size: 20,
-                        color: Colors.black,
-                      ),
+                    child: const Icon(
+                      Icons.close,
+                      size: 20,
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -115,23 +159,21 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
 
             // Logo RPLKIT
             Padding(
-              padding: const EdgeInsets.symmetric(),
+              padding: const EdgeInsets.symmetric(vertical: 10),
               child: Center(
                 child: Image.asset(
                   'assets/images/logo.png',
                   width: 200,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.dashboard_customize,
-                      color: Color.fromRGBO(62, 159, 127, 1),
-                      size: 30,
-                    );
-                  },
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.dashboard_customize,
+                    color: Color.fromRGBO(62, 159, 127, 1),
+                    size: 30,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Divider(
@@ -195,9 +237,7 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    _showLogoutDialog();
-                  },
+                  onPressed: () => _showLogoutDialog(),
                   icon: const Icon(Icons.logout, size: 20),
                   label: const Text(
                     'Logout',
@@ -238,7 +278,7 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
       title: Text(
         title,
         style: const TextStyle(
-          fontFamily: roboto,
+          fontFamily: SidebarPeminjamDrawer.roboto,
           fontSize: 14,
           fontWeight: FontWeight.w800,
           color: Color.fromRGBO(72, 141, 117, 1),
@@ -246,8 +286,8 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
       ),
       onTap: onTap,
       dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      horizontalTitleGap: 12,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      horizontalTitleGap: 8,
     );
   }
 
@@ -256,75 +296,53 @@ class _SidebarPeminjamDrawerState extends State<SidebarPeminjamDrawer> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Konfirmasi Logout',
           style: TextStyle(
-            fontFamily: roboto,
+            fontFamily: SidebarPeminjamDrawer.roboto,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: const Text(
           'Apakah Anda yakin ingin keluar?',
-          style: TextStyle(fontFamily: roboto, fontSize: 14),
+          style: TextStyle(
+            fontFamily: SidebarPeminjamDrawer.roboto,
+            fontSize: 14,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: const Text(
               'Batal',
-              style: TextStyle(fontFamily: roboto, color: Colors.grey),
+              style: TextStyle(
+                fontFamily: SidebarPeminjamDrawer.roboto,
+                color: Colors.grey,
+              ),
             ),
           ),
           ElevatedButton(
             onPressed: () async {
-              try {
-                print('Starting logout...');
-                
-                // Simpan navigator SEBELUM menutup dialog/drawer
-                final navigator = Navigator.of(context, rootNavigator: true);
-                
-                // Tutup dialog dan drawer sekaligus
-                Navigator.pop(dialogContext); // tutup dialog
-                Navigator.pop(context); // tutup drawer
-                
-                // Tunggu sebentar agar UI selesai update
-                await Future.delayed(const Duration(milliseconds: 300));
-                
-                // Lakukan logout
-                await Supabase.instance.client.auth.signOut();
-                print('Logout complete');
-                
-                // Tunggu sebentar lagi
-                await Future.delayed(const Duration(milliseconds: 100));
-                
-                print('Navigating to login...');
-                
-                // Navigate ke login menggunakan navigator yang sudah disimpan
-                navigator.pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (context) => const LoginPage(),
-                  ),
-                  (route) => false,
-                );
-                
-                print('Navigation complete');
-              } catch (e) {
-                print('Error during logout: $e');
-              }
+              final navigator = Navigator.of(context, rootNavigator: true);
+              Navigator.pop(dialogContext);
+              Navigator.pop(context);
+              await _supabase.auth.signOut();
+              navigator.pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                (route) => false,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromRGBO(220, 38, 38, 1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
             ),
             child: const Text(
               'Ya, Logout',
-              style: TextStyle(fontFamily: roboto, color: Colors.white),
+              style: TextStyle(
+                fontFamily: SidebarPeminjamDrawer.roboto,
+                color: Colors.white,
+              ),
             ),
           ),
         ],

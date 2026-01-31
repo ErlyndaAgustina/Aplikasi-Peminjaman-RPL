@@ -57,14 +57,17 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Padding(
                     padding: EdgeInsets.all(32),
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   );
                 }
 
                 // Jika error atau data kosong, pakai fallback default
                 final userData = snapshot.data;
                 final String nama = userData?['nama'] ?? 'Admin';
-                final String email = userData?['email'] ?? 'admin@brantas.sch.id';
+                final String email =
+                    userData?['email'] ?? 'admin@brantas.sch.id';
                 final String role = userData?['role'] ?? 'Admin';
 
                 return Padding(
@@ -120,7 +123,10 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
                               const SizedBox(height: 4),
                               // Label Role Dinamis
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color.fromRGBO(217, 253, 240, 1),
                                   borderRadius: BorderRadius.circular(8),
@@ -141,7 +147,11 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
                       ),
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: const Icon(Icons.close, size: 20, color: Colors.black),
+                        child: const Icon(
+                          Icons.close,
+                          size: 20,
+                          color: Colors.black,
+                        ),
                       ),
                     ],
                   ),
@@ -167,7 +177,10 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(height: 3, color: Color.fromRGBO(205, 238, 226, 1)),
+              child: Divider(
+                height: 3,
+                color: Color.fromRGBO(205, 238, 226, 1),
+              ),
             ),
 
             // Menu Items
@@ -183,7 +196,8 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
                   _buildMenuItem(
                     icon: Icons.group_outlined,
                     title: 'Manajemen Pengguna',
-                    onTap: () => _navigate(context, const ManajemenPenggunaPage()),
+                    onTap: () =>
+                        _navigate(context, const ManajemenPenggunaPage()),
                   ),
                   _buildMenuItem(
                     icon: Icons.inventory_2_outlined,
@@ -193,12 +207,14 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
                   _buildMenuItem(
                     icon: Icons.category_outlined,
                     title: 'Manajemen Kategori',
-                    onTap: () => _navigate(context, const ManajemenKategoriPage()),
+                    onTap: () =>
+                        _navigate(context, const ManajemenKategoriPage()),
                   ),
                   _buildMenuItem(
                     icon: Icons.assignment_outlined,
                     title: 'Manajemen Peminjaman',
-                    onTap: () => _navigate(context, const ManajemenPeminjamanPage()),
+                    onTap: () =>
+                        _navigate(context, const ManajemenPeminjamanPage()),
                   ),
                   _buildMenuItem(
                     icon: Icons.assignment_return_outlined,
@@ -223,12 +239,21 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
                 child: ElevatedButton.icon(
                   onPressed: _showLogoutDialog,
                   icon: const Icon(Icons.logout, size: 20),
-                  label: const Text('Logout', style: TextStyle(fontFamily: roboto, fontSize: 14, fontWeight: FontWeight.w600)),
+                  label: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontFamily: roboto,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ),
                 ),
               ),
@@ -242,13 +267,32 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
   // Helper navigasi biar kode lebih bersih
   void _navigate(BuildContext context, Widget page) {
     Navigator.pop(context); // Tutup drawer
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => page));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
   }
 
-  Widget _buildMenuItem({required IconData icon, required String title, required VoidCallback onTap}) {
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return ListTile(
-      leading: Icon(icon, color: const Color.fromRGBO(72, 141, 117, 1), size: 22),
-      title: Text(title, style: const TextStyle(fontFamily: roboto, fontSize: 13, fontWeight: FontWeight.w700, color: Color.fromRGBO(72, 141, 117, 1))),
+      leading: Icon(
+        icon,
+        color: const Color.fromRGBO(72, 141, 117, 1),
+        size: 22,
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontFamily: roboto,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: Color.fromRGBO(72, 141, 117, 1),
+        ),
+      ),
       onTap: onTap,
       dense: true,
       horizontalTitleGap: 8,
@@ -258,26 +302,24 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
   Future<void> _handleLogout(BuildContext navigationContext) async {
     try {
       print('Starting logout...');
-      
+
       // Lakukan logout
       await Supabase.instance.client.auth.signOut();
       print('Logout complete');
-      
+
       // Gunakan navigationContext yang sudah disimpan sebelum widget disposed
       print('Navigating to login...');
-      
+
       // Navigate ke login page dengan menghapus semua route sebelumnya
       Navigator.of(navigationContext).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => const LoginPage(),
-        ),
+        MaterialPageRoute(builder: (context) => const LoginPage()),
         (route) => false,
       );
-      
+
       print('Navigation complete');
     } catch (e) {
       print('Error during logout: $e');
-      
+
       // Tampilkan error jika context masih tersedia
       if (navigationContext.mounted) {
         ScaffoldMessenger.of(navigationContext).showSnackBar(
@@ -293,14 +335,12 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
   void _showLogoutDialog() {
     // Simpan context dari scaffold/page, bukan dari drawer
     final scaffoldContext = context;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Konfirmasi Logout',
           style: TextStyle(
@@ -325,10 +365,10 @@ class _SidebarAdminDrawerState extends State<SidebarAdminDrawer> {
             onPressed: () {
               // Tutup dialog
               Navigator.pop(dialogContext);
-              
+
               // Tutup drawer
               Navigator.pop(scaffoldContext);
-              
+
               // Panggil fungsi logout dengan context yang valid
               _handleLogout(scaffoldContext);
             },
