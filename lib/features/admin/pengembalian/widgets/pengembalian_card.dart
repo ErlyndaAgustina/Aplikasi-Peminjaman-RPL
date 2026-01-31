@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/model.dart';
 import 'detail_pengembalian_dialog.dart';
 import 'edit_pengembalian_dialog.dart';
@@ -9,13 +10,32 @@ const String roboto = 'Roboto';
 
 class PengembalianCard extends StatefulWidget {
   final PengembalianModel data;
-  const PengembalianCard({super.key, required this.data});
+  final VoidCallback onRefresh;
+  const PengembalianCard({
+    super.key,
+    required this.data,
+    required this.onRefresh,
+  });
 
   @override
   State<PengembalianCard> createState() => _PengembalianCardState();
 }
 
 class _PengembalianCardState extends State<PengembalianCard> {
+  // Di dalam PengembalianCard
+  void _openEditDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => EditPengembalianDialog(data: widget.data),
+    );
+
+    // NAH INI KUNCINYA:
+    // Jika dialog mengembalikan 'true', panggil fungsi refresh dari halaman utama
+    if (result == true) {
+      widget.onRefresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -156,27 +176,37 @@ class _PengembalianCardState extends State<PengembalianCard> {
                         const Color.fromRGBO(236, 254, 248, 1),
                         iconColor: const Color.fromRGBO(93, 93, 93, 1),
                         onTap: () {
-  showDialog(context: context, builder: (_) => DetailPengembalianDialog(data: widget.data));
-}
-                      
+                          showDialog(
+                            context: context,
+                            builder: (_) =>
+                                DetailPengembalianDialog(data: widget.data),
+                          );
+                        },
                       ),
                       const SizedBox(width: 6),
-                       _iconButton(
+                      _iconButton(
                         Icons.edit,
                         const Color.fromRGBO(236, 254, 248, 1),
                         iconColor: const Color.fromRGBO(93, 93, 93, 1),
-                        onTap: () {
-  showDialog(context: context, builder: (_) => EditPengembalianDialog(data: widget.data));
-}
+                        onTap: () => _openEditDialog(context), // 👈 FIX DI SINI
                       ),
                       const SizedBox(width: 6),
+                      // Di dalam PengembalianCard
                       _iconButton(
                         Icons.delete,
                         const Color.fromRGBO(255, 119, 119, 0.22),
                         iconColor: const Color.fromRGBO(255, 2, 2, 1),
                         onTap: () {
-  showDialog(context: context, builder: (_) => const HapusPengembalianDialog());
-}
+                          showDialog(
+                            context: context,
+                            builder: (_) => HapusPengembalianDialog(
+                              id: widget
+                                  .data
+                                  .id, // Pastikan widget.data.id berisi UUID yang benar
+                              onDeleted: widget.onRefresh,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

@@ -1,18 +1,5 @@
-class UnitDipinjamModel {
-  final String namaUnit;
-  final String kodeUnit;
-  final String kondisi;
-  final String kategori;
-
-  UnitDipinjamModel({
-    required this.namaUnit,
-    required this.kodeUnit,
-    required this.kondisi,
-    required this.kategori,
-  });
-}
-
 class DetailPeminjamanModel {
+  final String idPeminjaman; // Tambahkan ID untuk query detail
   final String namaPeminjam;
   final String kodePeminjaman;
   final String tanggal;
@@ -22,6 +9,7 @@ class DetailPeminjamanModel {
   final String catatan;
 
   DetailPeminjamanModel({
+    required this.idPeminjaman,
     required this.namaPeminjam,
     required this.kodePeminjaman,
     required this.tanggal,
@@ -30,30 +18,48 @@ class DetailPeminjamanModel {
     required this.status,
     required this.catatan,
   });
+
+  factory DetailPeminjamanModel.fromJson(Map<String, dynamic> json) {
+    // Menghitung total unit dari list detail_peminjaman
+    final listDetail = json['detail_peminjaman'] as List? ?? [];
+    
+    return DetailPeminjamanModel(
+      idPeminjaman: json['id_peminjaman'],
+      namaPeminjam: json['users']['nama'],
+      kodePeminjaman: json['kode_peminjaman'],
+      tanggal: json['tanggal_pinjam'], // Nanti bisa diformat pakai package intl
+      jam: "Jam ${json['jam_mulai']} - ${json['jam_selesai']}",
+      totalUnit: listDetail.length,
+      status: json['status'],
+      catatan: "Batas: ${json['batas_kembali']}",
+    );
+  }
 }
 
+class UnitDipinjamModel {
+  final String idDetail;
+  final String namaUnit;
+  final String kodeUnit;
+  final String kondisi;
+  final String kategori;
 
-final detailPeminjamanDummy = DetailPeminjamanModel(
-  namaPeminjam: 'Budi Santoso',
-  kodePeminjaman: 'PJM-20260114-d1cb',
-  tanggal: '12 Oktober 2025',
-  jam: 'Jam 1 - 5',
-  totalUnit: 2,
-  status: 'Dipinjam',
-  catatan: 'Batas: 12 Oktober 2025, 10.20'
-);
+  UnitDipinjamModel({
+    required this.idDetail,
+    required this.namaUnit,
+    required this.kodeUnit,
+    required this.kondisi,
+    required this.kategori,
+  });
 
-final List<UnitDipinjamModel> unitDipinjamDummy = [
-  UnitDipinjamModel(
-    namaUnit: 'Macbook Pro',
-    kodeUnit: 'LPT-001-01',
-    kondisi: 'Baik',
-    kategori: 'Perangkat Komputasi',
-  ),
-  UnitDipinjamModel(
-    namaUnit: 'Arduino',
-    kodeUnit: 'LPT-002-01',
-    kondisi: 'Baik',
-    kategori: 'Perangkat Mobile & IoT',
-  ),
-];
+  factory UnitDipinjamModel.fromJson(Map<String, dynamic> json) {
+    final unit = json['alat_unit'];
+    final alat = unit['alat'];
+    return UnitDipinjamModel(
+      idDetail: json['id_detail'],
+      namaUnit: alat['nama_alat'],
+      kodeUnit: unit['kode_unit'],
+      kondisi: unit['kondisi'],
+      kategori: alat['kategori']['nama_kategori'],
+    );
+  }
+}

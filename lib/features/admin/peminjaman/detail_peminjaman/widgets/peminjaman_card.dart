@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
-import 'unit_dipinjam_card.dart';
 import '../../widgets/status_chip.dart';
+import 'package:intl/intl.dart';
 
 class PeminjamanCard extends StatefulWidget {
   final DetailPeminjamanModel data;
@@ -14,81 +14,103 @@ class PeminjamanCard extends StatefulWidget {
 class _PeminjamanCardState extends State<PeminjamanCard> {
   @override
   Widget build(BuildContext context) {
+    // Definisi warna sesuai gambar
+    const Color primaryGreen = Color(0xFF488D75);
+    const Color borderGreen = Color(0xFFCDEEE2);
+    const Color textDark = Color(0xFF312F34);
+    const Color warningOrange = Color(0xFFE67E22); // Warna oranye batas waktu
+    const Color subTextGrey = Color(0xFF5A5A5A);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
+        borderRadius: BorderRadius.circular(24), // Lebih rounded sesuai gambar
+        border: Border.all(color: borderGreen, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// HEADER
+          /// HEADER (Nama & Status)
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
                   widget.data.namaPeminjam,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontFamily: roboto,
                     fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                    color: Color.fromRGBO(49, 47, 52, 1),
+                    fontSize: 20,
+                    color: textDark,
                   ),
                 ),
               ),
+              // Ganti dengan StatusChip milikmu
               StatusChip(status: widget.data.status),
             ],
           ),
 
-          const SizedBox(height: 2),
-
+          /// KODE PEMINJAMAN
           Text(
             widget.data.kodePeminjaman,
             style: const TextStyle(
-              fontFamily: roboto,
-              fontSize: 12,
-              color: Color.fromRGBO(72, 141, 117, 1),
+              fontSize: 14,
+              color: primaryGreen,
               fontWeight: FontWeight.w600,
             ),
           ),
 
-          const SizedBox(height: 15),
+          const SizedBox(height: 20),
 
-          /// TANGGAL & JAM (RESPONSIVE)
+          /// INFO BARIS 1 (Tanggal & Jam)
           Row(
             children: [
+              // Tanggal
               Expanded(
+                flex: 6,
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 14),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        widget.data.tanggal,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontFamily: roboto,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 20,
+                      color: textDark,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      // Parsing string dari Supabase ke DateTime, lalu format ke lokal Indonesia
+                      DateFormat(
+                        'dd MMMM yyyy',
+                        'id',
+                      ).format(DateTime.parse(widget.data.tanggal)),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: textDark,
                       ),
                     ),
                   ],
                 ),
               ),
+              // Jam
               Expanded(
+                flex: 4,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const Icon(Icons.schedule, size: 14),
-                    const SizedBox(width: 0),
+                    const Icon(
+                      Icons.access_time_filled,
+                      size: 20,
+                      color: subTextGrey,
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       widget.data.jam,
-                      style: const TextStyle(fontSize: 12, fontFamily: roboto),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: textDark,
+                      ),
                     ),
                   ],
                 ),
@@ -96,45 +118,56 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
             ],
           ),
 
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
+
+          /// INFO BARIS 2 (Batas Waktu & Unit)
           Row(
             children: [
-              /// LEFT - CATATAN
+              // Batas Waktu
               Expanded(
+                flex: 6,
                 child: Row(
                   children: [
                     const Icon(
-                      Icons.warning_amber_rounded,
-                      size: 14,
-                      color: Color.fromRGBO(255, 2, 2, 1),
+                      Icons.event_busy_outlined,
+                      size: 20,
+                      color: warningOrange,
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(
+                    const SizedBox(width: 8),
+                    Flexible(
                       child: Text(
-                        widget.data.catatan,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        widget
+                            .data
+                            .catatan,
                         style: const TextStyle(
-                          fontFamily: roboto,
-                          fontSize: 12,
-                          color: Color.fromRGBO(255, 2, 2, 1),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: warningOrange,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              /// RIGHT - UNIT
-              Row(
-                children: [
-                  const Icon(Icons.inventory_2_outlined, size: 14),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${widget.data.totalUnit} unit',
-                    style: const TextStyle(fontFamily: roboto, fontSize: 12),
-                  ),
-                ],
+              // Unit
+              Expanded(
+                flex: 4,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.inventory_2, size: 20, color: subTextGrey),
+                    const SizedBox(width: 8),
+                    Text(
+                      "${widget.data.totalUnit} Unit",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: textDark,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

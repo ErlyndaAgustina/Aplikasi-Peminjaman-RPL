@@ -3,9 +3,10 @@ import '../../profile/profile_page.dart';
 import '../sidebar/sidebar_admin.dart';
 import 'models/model.dart';
 import 'widgets/pengembalian_card.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Definisi font roboto jika belum ada secara global
-const String roboto = 'Roboto'; 
+const String roboto = 'Roboto';
 
 class PengembalianPage extends StatefulWidget {
   const PengembalianPage({super.key});
@@ -15,29 +16,72 @@ class PengembalianPage extends StatefulWidget {
 }
 
 class _PengembalianPageState extends State<PengembalianPage> {
-  // Langsung inisialisasi di sini, jangan pakai 'late' agar tidak error saat hot reload
+  final _supabase = Supabase.instance.client;
   final TextEditingController _searchController = TextEditingController();
+
+  List<PengembalianModel> _allData = [];
   List<PengembalianModel> _filteredData = [];
-  bool _isInitialized = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _filteredData = List.from(dummyPengembalian);
-    _isInitialized = true;
+    _fetchData();
   }
+
+  // Fungsi READ
+  // Di dalam file pengembalian_page.dart, fungsi _fetchData
+  // Di pengembalian_page.dart
+Future<void> _fetchData() async {
+  // Jangan hapus isLoading biar user tahu data lagi ditarik ulang
+  setState(() => _isLoading = true); 
+  
+  try {
+    // Query ini sudah sangar karena narik sampai ke akar-akarnya (detail_peminjaman)
+    final response = await _supabase
+        .from('pengembalian')
+        .select('''
+          *,
+          peminjaman:id_peminjaman (
+            kode_peminjaman,
+            jam_selesai,
+            users:id_user ( nama ),
+            detail_peminjaman (
+              alat_unit (
+                kode_unit,
+                alat ( nama_alat )
+              )
+            )
+          )
+        ''')
+        .order('created_at', ascending: false);
+
+    final data = (response as List)
+        .map((e) => PengembalianModel.fromJson(e))
+        .toList();
+
+    if (mounted) {
+      setState(() {
+        _allData = data;
+        _filteredData = data;
+        _isLoading = false;
+      });
+    }
+  } catch (e) {
+    if (mounted) setState(() => _isLoading = false);
+    print("Error: $e");
+  }
+}
 
   void _filterSearch(String query) {
     setState(() {
-      if (query.isEmpty) {
-        _filteredData = List.from(dummyPengembalian);
-      } else {
-        _filteredData = dummyPengembalian
-            .where((item) =>
+      _filteredData = _allData
+          .where(
+            (item) =>
                 item.nama.toLowerCase().contains(query.toLowerCase()) ||
-                item.kode.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
+                item.kode.toLowerCase().contains(query.toLowerCase()),
+          )
+          .toList();
     });
   }
 
@@ -49,12 +93,6 @@ class _PengembalianPageState extends State<PengembalianPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Safety check sederhana
-    if (!_isInitialized) {
-      _filteredData = List.from(dummyPengembalian);
-      _isInitialized = true;
-    }
-
     return Scaffold(
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
       drawer: const SidebarAdminDrawer(),
@@ -84,7 +122,10 @@ class _PengembalianPageState extends State<PengembalianPage> {
                   child: Builder(
                     builder: (context) => GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
-                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                      child: Icon(
+                        Icons.menu,
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
                     ),
                   ),
                 ),
@@ -146,14 +187,22 @@ class _PengembalianPageState extends State<PengembalianPage> {
             _buildSearchBar(),
             const SizedBox(height: 10),
             Expanded(
-              child: _filteredData.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      itemCount: _filteredData.length,
-                      itemBuilder: (context, index) {
-                        return PengembalianCard(data: _filteredData[index]);
-                      },
-                    ),
+              child: RefreshIndicator(
+                onRefresh: _fetchData,
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _filteredData.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        itemCount: _filteredData.length,
+                        itemBuilder: (context, index) {
+                          return PengembalianCard(
+                            data: _filteredData[index],
+                            onRefresh: _fetchData, // Tambahkan callback refresh
+                          );
+                        },
+                      ),
+              ),
             ),
           ],
         ),
@@ -212,7 +261,10 @@ class _PengembalianPageState extends State<PengembalianPage> {
               width: 1.5,
             ),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 0,
+            horizontal: 12,
+          ),
         ),
       ),
     );
@@ -225,7 +277,10 @@ class _PengembalianPageState extends State<PengembalianPage> {
         children: [
           Icon(Icons.search_off, size: 64, color: Colors.grey),
           SizedBox(height: 12),
-          Text('Data tidak ditemukan', style: TextStyle(color: Colors.grey, fontSize: 16)),
+          Text(
+            'Data tidak ditemukan',
+            style: TextStyle(color: Colors.grey, fontSize: 16),
+          ),
         ],
       ),
     );

@@ -54,7 +54,7 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
             ],
           ),
           const SizedBox(height: 2),
-          
+
           // Kode Peminjaman
           Text(
             widget.data.kode,
@@ -105,7 +105,11 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 16,
+                  color: Colors.red,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   "Terlambat ${widget.data.durasiTerlambat} hari",
@@ -131,7 +135,12 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => DetailPeminjamanPage()),
+                    MaterialPageRoute(
+                      builder: (_) => DetailPeminjamanPage(
+                        peminjamanId:
+                            widget.data.idPeminjaman, // Kirim ID-nya ke sini!
+                      ),
+                    ),
                   );
                 },
               ),
@@ -143,7 +152,8 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
                 onTap: () async {
                   final result = await showDialog(
                     context: context,
-                    builder: (context) => EditPeminjamanDialog(data: widget.data),
+                    builder: (context) =>
+                        EditPeminjamanDialog(data: widget.data),
                   );
                   if (result == true) widget.onChanged();
                 },
@@ -156,7 +166,8 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
                 onTap: () async {
                   final confirmed = await showDialog<bool>(
                     context: context,
-                    builder: (context) => HapusPeminjamanDialog(namaPeminjam: widget.data.nama),
+                    builder: (context) =>
+                        HapusPeminjamanDialog(namaPeminjam: widget.data.nama),
                   );
 
                   if (confirmed == true) {
@@ -175,13 +186,21 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
     );
   }
 
-  Widget _iconBtn(IconData icon, Color bg, {Color iconColor = Colors.black, VoidCallback? onTap}) {
+  Widget _iconBtn(
+    IconData icon,
+    Color bg, {
+    Color iconColor = Colors.black,
+    VoidCallback? onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Icon(icon, size: 16, color: iconColor),
       ),
     );

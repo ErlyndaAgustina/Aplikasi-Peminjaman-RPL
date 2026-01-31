@@ -33,24 +33,37 @@ class DetailPengembalianDialog extends StatelessWidget {
                     _item('Nama Peminjam', data.nama),
                     _item('Kode Peminjaman', data.kode),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: _item('Kembali Pada', data.tanggal)),
+                        Expanded(
+                          flex: 2, // Tanggal lebih lebar
+                          child: _item('Kembali Pada', data.tanggal),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _item('Jam ke', '2'),
-                        ), // Contoh dummy jam
+                          flex: 1, // Jam lebih kecil
+                          child: _item('Jam ke', '${data.jamSelesai}'),
+                        ),
                       ],
                     ),
+
                     _item(
                       'Unit yang dikembalikan',
-                      'Macbook Pro\nKode: LPT-001-U1',
+                      '${data.namaAlat}\nKode: ${data.kodeUnit}', // Ini akan muncul persis seperti gambar
                       isBox: true,
                     ),
+
                     _item('Terlambat', '${data.terlambatMenit} menit'),
-                    _item('Denda Terlambat', 'Rp 0'),
-                    _item('Denda Rusak', 'Rp 0'),
-                    _item('Catatan Kerusakan', 'Tidak ada kerusakan apapun'),
-                    _item('Total Denda', 'Rp ${data.totalDenda}', isLast: true),
+                    _item('Denda Terlambat', 'Rp ${data.dendaTerlambat}'),
+                    _item('Denda Rusak', 'Rp ${data.dendaRusak}'),
+                    _item('Catatan Kerusakan', data.catatan),
+
+                    _item(
+                      'Total Denda',
+                      'Rp ${data.totalDenda}',
+                      isLast: true,
+                      isBoldVal: true, // Tambahkan opsi bold untuk total
+                    ),
                   ],
                 ),
               ),
@@ -102,6 +115,7 @@ class DetailPengembalianDialog extends StatelessWidget {
     String val, {
     bool isBox = false,
     bool isLast = false,
+    bool isBoldVal = false, // Parameter baru
   }) {
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
@@ -110,14 +124,18 @@ class DetailPengembalianDialog extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 8),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isBox ? const Color(0xFFF0F9F6) : Colors.white,
               border: Border.all(color: const Color(0xFFCDEEE2)),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -125,7 +143,10 @@ class DetailPengembalianDialog extends StatelessWidget {
               val,
               style: TextStyle(
                 fontSize: 13,
-                color: isBox ? const Color(0xFF3E9F7F) : Colors.black54,
+                fontWeight: isBoldVal ? FontWeight.bold : FontWeight.normal,
+                color: isBox
+                    ? const Color(0xFF3E9F7F)
+                    : (isBoldVal ? Colors.red : Colors.black54),
               ),
             ),
           ),
