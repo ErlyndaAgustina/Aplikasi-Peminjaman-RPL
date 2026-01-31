@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/service.dart'; // Pastikan path service-nya benar
-import '../models/models.dart';  // Pastikan path model-nya benar
+import '../models/models.dart'; // Pastikan path model-nya benar
 
 const String roboto = 'Roboto';
 
@@ -25,7 +25,8 @@ class _KategoriFilterState extends State<KategoriFilter> {
 
   Future<void> _loadKategori() async {
     try {
-      final data = await AlatService().getKategori(); // Pastikan fungsi ini ada di service
+      final data = await AlatService()
+          .getKategori(); // Pastikan fungsi ini ada di service
       setState(() {
         listKategoriDB = data;
         isLoading = false;
@@ -56,7 +57,7 @@ class _KategoriFilterState extends State<KategoriFilter> {
       itemBuilder: (context) {
         if (isLoading) {
           return [
-            const PopupMenuItem(enabled: false, child: Text('Loading...'))
+            const PopupMenuItem(enabled: false, child: Text('Loading...')),
           ];
         }
         return displayList.map((kategori) {
@@ -76,6 +77,8 @@ class _KategoriFilterState extends State<KategoriFilter> {
         }).toList();
       },
       child: Container(
+        // Tambahkan width agar container punya ruang untuk mendorong spacer
+        width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -83,27 +86,38 @@ class _KategoriFilterState extends State<KategoriFilter> {
           border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
         ),
         child: Row(
+          // MainAxisAlignment.spaceBetween juga membantu memastikan ujung ke ujung
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(
-              Icons.filter_alt_outlined,
-              size: 18,
-              color: Color.fromRGBO(62, 159, 127, 1),
-            ),
-            const SizedBox(width: 8),
-            // Gunakan Flexible agar teks panjang tidak overflow
-            Flexible(
-              child: Text(
-                selectedKategori,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: roboto,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+            // Icon Filter dan Text dibungkus Row lagi supaya nempel kiri
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.filter_alt_outlined,
+                  size: 18,
                   color: Color.fromRGBO(62, 159, 127, 1),
                 ),
-              ),
+                const SizedBox(width: 8),
+                // Batasi lebar teks agar tidak menabrak icon kanan
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.5,
+                  ),
+                  child: Text(
+                    selectedKategori,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: roboto,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color.fromRGBO(62, 159, 127, 1),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const Spacer(),
+            // Icon dropdown sekarang pasti di pojok kanan karena Row di atas mainAxisSize: min
             const Icon(
               Icons.keyboard_arrow_down,
               color: Color.fromRGBO(62, 159, 127, 1),

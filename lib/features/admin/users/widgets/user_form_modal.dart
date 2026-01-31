@@ -27,6 +27,12 @@ class _UserFormModalState extends State<UserFormModal> {
     selectedRole = widget.user?.role ?? "Pilih Role";
   }
 
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.user != null;
@@ -103,26 +109,44 @@ class _UserFormModalState extends State<UserFormModal> {
           child: ElevatedButton(
             // Di UserFormModal - Bagian onPressed tombol simpan/tambah
             onPressed: () {
-              if (nameController.text.isNotEmpty &&
-                  emailController.text.isNotEmpty) {
-                // Validasi password jika tambah baru
-                if (widget.user == null && passwordController.text.length < 6) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Password minimal 6 karakter"),
-                    ),
-                  );
-                  return;
-                }
-
-                widget.onSave({
-                  'nama': nameController.text,
-                  'email': emailController.text,
-                  'password': passwordController.text, // WAJIB DIKIRIM
-                  'role': selectedRole,
-                });
-                Navigator.pop(context);
+              // 1. Cek Nama & Email tidak kosong
+              if (nameController.text.isEmpty || emailController.text.isEmpty) {
+                _showSnackBar("Nama dan Email wajib diisi!");
+                return;
               }
+
+              // 2. Cek apakah Role sudah dipilih
+              if (selectedRole == "Pilih Role") {
+                _showSnackBar("Silakan pilih Role terlebih dahulu!");
+                return;
+              }
+
+              // 3. Validasi Password (untuk tambah baru)
+              if (widget.user == null && passwordController.text.length < 6) {
+                _showSnackBar("Password minimal 6 karakter");
+                return;
+              }
+
+              // 4. Validasi Format Email
+              final email = emailController.text.trim().toLowerCase();
+              bool emailValid = RegExp(
+                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+              ).hasMatch(email);
+
+              if (!emailValid) {
+                _showSnackBar("Format email tidak valid!");
+                return;
+              }
+
+              // Jika semua lolos, baru panggil onSave
+              widget.onSave({
+                'nama': nameController.text.trim(),
+                'email': email,
+                'password': passwordController.text,
+                'role': selectedRole
+                    .toLowerCase(), // Pastikan dikirim dalam huruf kecil
+              });
+              Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
@@ -211,40 +235,42 @@ class _UserFormModalState extends State<UserFormModal> {
   }
 
   Widget _dropdownRole() {
-  // Pastikan value yang dikirim ke Dropdown disesuaikan formatnya
-  // Kita buat daftar role yang konsisten (huruf kapital di tampilan, kecil di value)
-  final List<String> roleOptions = ['admin', 'petugas', 'peminjam'];
+    // Pastikan value yang dikirim ke Dropdown disesuaikan formatnya
+    // Kita buat daftar role yang konsisten (huruf kapital di tampilan, kecil di value)
+    final List<String> roleOptions = ['admin', 'petugas', 'peminjam'];
 
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    decoration: BoxDecoration(
-      border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: DropdownButtonHideUnderline(
-      child: DropdownButton<String>(
-        // Pakai toLowerCase() supaya matching dengan daftar roleOptions
-        value: (selectedRole == "Pilih Role" || selectedRole.isEmpty) 
-               ? null 
-               : selectedRole.toLowerCase(),
-        hint: const Text(
-          "Pilih Role",
-          style: TextStyle(fontSize: 13, color: Colors.grey),
-        ),
-        isExpanded: true,
-        items: roleOptions.map((val) {
-          return DropdownMenuItem(
-            value: val, // ini 'admin' (kecil)
-            child: Text(val[0].toUpperCase() + val.substring(1)), // ini 'Admin' (Tampilan saja yang besar)
-          );
-        }).toList(),
-        onChanged: (val) {
-          setState(() {
-            selectedRole = val!;
-          });
-        },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
+        borderRadius: BorderRadius.circular(10),
       ),
-    ),
-  );
-}
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          // Pakai toLowerCase() supaya matching dengan daftar roleOptions
+          value: (selectedRole == "Pilih Role" || selectedRole.isEmpty)
+              ? null
+              : selectedRole.toLowerCase(),
+          hint: const Text(
+            "Pilih Role",
+            style: TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          isExpanded: true,
+          items: roleOptions.map((val) {
+            return DropdownMenuItem(
+              value: val, // ini 'admin' (kecil)
+              child: Text(
+                val[0].toUpperCase() + val.substring(1),
+              ), // ini 'Admin' (Tampilan saja yang besar)
+            );
+          }).toList(),
+          onChanged: (val) {
+            setState(() {
+              selectedRole = val!;
+            });
+          },
+        ),
+      ),
+    );
+  }
 }

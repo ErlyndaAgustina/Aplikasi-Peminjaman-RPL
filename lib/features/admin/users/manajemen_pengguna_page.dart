@@ -23,67 +23,78 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
 
   // Di ManajemenPenggunaPage
   void _openUserForm({UserModel? user}) {
-  showDialog(
-    context: context,
-    builder: (context) => UserFormModal(
-      user: user,
-      onSave: (data) async {
-        try {
-          final String roleLower = data['role'].toString().toLowerCase();
-          final String emailBaru = data['email'];
+    showDialog(
+      context: context,
+      builder: (context) => UserFormModal(
+        user: user,
+        onSave: (data) async {
+          try {
+            final String roleLower = data['role'].toString().toLowerCase();
+            final String emailBaru = data['email']
+                .toString()
+                .trim()
+                .toLowerCase();
 
-          if (user != null) {
-            // === MODE EDIT ===
-            
-            // 1. Update Email di Supabase Auth (WAJIB)
-            // Ini yang mengubah data di tabel internal auth.users
-            await _supabase.auth.updateUser(
-              UserAttributes(email: emailBaru),
-            );
+            if (user != null) {
+              // --- BAGIAN EDIT PENGGUNA ---
 
-            // 2. Update Data di Tabel public.users
-            await _supabase
-                .from('users')
-                .update({
+              // 1. Ambil auth_user_id dari database dulu (karena kita butuh ID Auth-nya)
+              final userData = await _supabase
+                  .from('users')
+                  .select('auth_user_id')
+                  .eq('id_user', user.idUser)
+                  .single();
+
+              final String targetAuthId = userData['auth_user_id'];
+
+              // 2. Update Email di Auth pakai RPC (Fungsi SQL yang kita buat tadi)
+              if (user.email != emailBaru) {
+                await _supabase.rpc(
+                  'admin_update_auth_email',
+                  params: {
+                    'target_auth_id': targetAuthId,
+                    'new_email': emailBaru,
+                  },
+                );
+              }
+
+              // 3. Update data di tabel public.users
+              await _supabase
+                  .from('users')
+                  .update({
+                    'nama': data['nama'],
+                    'email': emailBaru,
+                    'role': roleLower,
+                  })
+                  .eq('id_user', user.idUser);
+
+              _showSnackBar("Berhasil memperbarui data & email!", Colors.green);
+            } else {
+              // --- BAGIAN TAMBAH PENGGUNA (Code kamu sudah cukup oke) ---
+              final AuthResponse res = await _supabase.auth.signUp(
+                email: emailBaru,
+                password: data['password'],
+                data: {'nama': data['nama'], 'role': roleLower},
+              );
+
+              if (res.user?.id != null) {
+                await _supabase.from('users').upsert({
+                  'auth_user_id': res.user!.id,
                   'nama': data['nama'],
-                  'email': emailBaru, // Supaya email di tabel kita juga update
+                  'email': emailBaru,
                   'role': roleLower,
-                })
-                .eq('id_user', user.idUser);
-
-            _showSnackBar("Berhasil memperbarui data & email!", Colors.green);
-          } else {
-            // === MODE TAMBAH BARU ===
-            
-            // 1. SignUp ke Auth
-            final AuthResponse res = await _supabase.auth.signUp(
-              email: emailBaru,
-              password: data['password'],
-              data: {'nama': data['nama'], 'role': roleLower},
-            );
-
-            final String? newAuthId = res.user?.id;
-
-            // 2. Insert/Upsert ke Tabel public.users
-            if (newAuthId != null) {
-              await _supabase.from('users').upsert({
-                'auth_user_id': newAuthId,
-                'nama': data['nama'],
-                'email': emailBaru,
-                'role': roleLower,
-              }, onConflict: 'auth_user_id');
-              _showSnackBar("Pengguna baru ditambahkan!", Colors.green);
+                }, onConflict: 'auth_user_id');
+                _showSnackBar("Pengguna baru ditambahkan!", Colors.green);
+              }
             }
+            setState(() {}); // Refresh UI
+          } catch (e) {
+            _showSnackBar("Gagal: $e", Colors.red);
           }
-        } catch (e) {
-          // Jika error "Email change requires confirmation", 
-          // berarti setting di dashboard Supabase belum benar-benar mati.
-          _showSnackBar("Gagal: $e", Colors.red);
-        }
-      },
-    ),
-  );
-}
+        },
+      ),
+    );
+  }
 
   void _showSnackBar(String msg, Color color) {
     if (!mounted) return;
@@ -114,7 +125,6 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
             const SizedBox(height: 12),
             Expanded(
               child: StreamBuilder<List<Map<String, dynamic>>>(
-                // Real-time stream dari tabel users
                 stream: _supabase.from('users').stream(primaryKey: ['id_user']),
                 builder: (context, snapshot) {
                   if (snapshot.hasError)
@@ -150,11 +160,64 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                         user: u,
                         onEdit: (selected) => _openUserForm(user: selected),
                         onDelete: (selected) async {
-                          // Hapus data di tabel public.users
-                          await _supabase
-                              .from('users')
-                              .delete()
-                              .eq('id_user', selected.idUser);
+                          try {
+                            // 1. CEK VALIDASI: Apakah user punya data di tabel lain?
+                            // Cek di tabel peminjaman
+                            final peminjamanData = await _supabase
+                                .from('peminjaman')
+                                .select('id_peminjaman')
+                                .eq('id_user', selected.idUser)
+                                .limit(1);
+
+                            // Cek di tabel log_aktivitas
+                            final logData = await _supabase
+                                .from('log_aktivitas')
+                                .select('id_log')
+                                .eq('id_user', selected.idUser)
+                                .limit(1);
+
+                            if (peminjamanData.isNotEmpty ||
+                                logData.isNotEmpty) {
+                              _showSnackBar(
+                                "Tidak dapat menghapus: Pengguna ini memiliki riwayat transaksi/aktivitas.",
+                                Colors.orange,
+                              );
+                              return; // Berhenti di sini, jangan lanjut hapus
+                            }
+
+                            // 2. Jika lolos validasi, ambil ID Auth-nya
+                            final userData = await _supabase
+                                .from('users')
+                                .select('auth_user_id')
+                                .eq('id_user', selected.idUser)
+                                .single();
+
+                            final String? authId = userData['auth_user_id'];
+
+                            if (authId != null) {
+                              // 3. Hapus akun di Auth lewat RPC
+                              await _supabase.rpc(
+                                'admin_delete_auth_user',
+                                params: {'target_auth_id': authId},
+                              );
+
+                              // 4. Hapus data di tabel public
+                              await _supabase
+                                  .from('users')
+                                  .delete()
+                                  .eq('id_user', selected.idUser);
+
+                              if (mounted) {
+                                setState(() {}); // Refresh UI
+                                _showSnackBar(
+                                  "Pengguna berhasil dihapus!",
+                                  Colors.green,
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            _showSnackBar("Gagal menghapus: $e", Colors.red);
+                          }
                         },
                       );
                     },
