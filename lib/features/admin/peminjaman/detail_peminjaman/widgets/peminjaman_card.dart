@@ -123,51 +123,44 @@ class _PeminjamanCardState extends State<PeminjamanCard> {
           /// INFO BARIS 2 (Batas Waktu & Unit)
           Row(
             children: [
-              // Batas Waktu
-              Expanded(
-                flex: 6,
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.event_busy_outlined,
-                      size: 20,
+              // Bagian Batas Waktu (Kiri)
+              Row(
+                mainAxisSize:
+                    MainAxisSize.min, // Biar lebarnya pas dengan konten
+                children: [
+                  const Icon(
+                    Icons.edit_calendar_rounded,
+                    size: 20,
+                    color: warningOrange,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.data.catatan,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                       color: warningOrange,
                     ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        widget
-                            .data
-                            .catatan,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: warningOrange,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              // Unit
-              Expanded(
-                flex: 4,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.inventory_2, size: 20, color: subTextGrey),
-                    const SizedBox(width: 8),
-                    Text(
-                      "${widget.data.totalUnit} Unit",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: textDark,
-                      ),
+
+              const Spacer(), // <--- Ini yang bikin bagian Unit terdorong ke paling kanan
+              // Bagian Unit (Kanan)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.inventory_2, size: 20, color: subTextGrey),
+                  const SizedBox(width: 8),
+                  Text(
+                    "${widget.data.totalUnit} Unit",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: textDark,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),

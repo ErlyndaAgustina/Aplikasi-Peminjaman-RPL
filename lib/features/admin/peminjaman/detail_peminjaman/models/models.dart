@@ -1,5 +1,5 @@
 class DetailPeminjamanModel {
-  final String idPeminjaman; // Tambahkan ID untuk query detail
+  final String idPeminjaman;
   final String namaPeminjam;
   final String kodePeminjaman;
   final String tanggal;
@@ -20,20 +20,28 @@ class DetailPeminjamanModel {
   });
 
   factory DetailPeminjamanModel.fromJson(Map<String, dynamic> json) {
-    // Menghitung total unit dari list detail_peminjaman
-    final listDetail = json['detail_peminjaman'] as List? ?? [];
+  final listDetail = json['detail_peminjaman'] as List? ?? [];
+  
+  // Format Batas Kembali secara manual agar sama dengan PeminjamanModel
+  String batasFormatted = "-";
+  if (json['batas_kembali'] != null) {
+    DateTime dtBatas = DateTime.parse(json['batas_kembali']);
+    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     
-    return DetailPeminjamanModel(
-      idPeminjaman: json['id_peminjaman'],
-      namaPeminjam: json['users']['nama'],
-      kodePeminjaman: json['kode_peminjaman'],
-      tanggal: json['tanggal_pinjam'], // Nanti bisa diformat pakai package intl
-      jam: "Jam ${json['jam_mulai']} - ${json['jam_selesai']}",
-      totalUnit: listDetail.length,
-      status: json['status'],
-      catatan: "Batas: ${json['batas_kembali']}",
-    );
+    batasFormatted = "Batas: ${dtBatas.day} ${months[dtBatas.month - 1]} ${dtBatas.year}, ${dtBatas.hour.toString().padLeft(2, '0')}:${dtBatas.minute.toString().padLeft(2, '0')}";
   }
+
+  return DetailPeminjamanModel(
+    idPeminjaman: json['id_peminjaman'],
+    namaPeminjam: json['users']['nama'],
+    kodePeminjaman: json['kode_peminjaman'],
+    tanggal: json['tanggal_pinjam'], 
+    jam: "Jam ${json['jam_mulai']} - ${json['jam_selesai']}",
+    totalUnit: listDetail.length,
+    status: json['status'],
+    catatan: batasFormatted, // Sekarang berisi string yang sudah diformat rapi
+  );
+}
 }
 
 class UnitDipinjamModel {

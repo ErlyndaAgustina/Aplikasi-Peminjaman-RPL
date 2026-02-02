@@ -26,28 +26,39 @@ class PeminjamanModel {
   factory PeminjamanModel.fromSupabase(Map<String, dynamic> map) {
     final userData = map['users'] as Map<String, dynamic>?;
     final namaUser = userData?['nama'] ?? 'Tanpa Nama';
-    
+
     // 1. Format Tanggal Pinjam
     DateTime dtPinjam = DateTime.parse(map['tanggal_pinjam']);
-    String tglFormatted = "${dtPinjam.day} ${_getMonthName(dtPinjam.month)} ${dtPinjam.year}";
+    String tglFormatted =
+        "${dtPinjam.day} ${_getMonthName(dtPinjam.month)} ${dtPinjam.year}";
 
     // 2. Format Jam Pelajaran
     String jamPelajaran = "Jam ${map['jam_mulai']} - ${map['jam_selesai']}";
 
     // 3. Format Batas Kembali
-    DateTime? dtBatas = map['batas_kembali'] != null ? DateTime.parse(map['batas_kembali']) : null;
-    String batasFormatted = dtBatas != null 
+    DateTime? dtBatas = map['batas_kembali'] != null
+        ? DateTime.parse(map['batas_kembali'])
+        : null;
+    String batasFormatted = dtBatas != null
         ? "${dtBatas.day} ${_getMonthName(dtBatas.month)} ${dtBatas.year}, ${dtBatas.hour.toString().padLeft(2, '0')}:${dtBatas.minute.toString().padLeft(2, '0')}"
         : "-";
 
     // 4. Hitung Durasi Terlambat
     int terlambatHari = 0;
     if (map['status'] == 'terlambat' && dtBatas != null) {
-      terlambatHari = DateTime.now().difference(dtBatas).inDays;
+      // Ambil tanggal hari ini tanpa jam (00:00)
+      DateTime today = DateTime.now();
+      DateTime todayDate = DateTime(today.year, today.month, today.day);
+
+      // Ambil tanggal batas tanpa jam (00:00)
+      DateTime batasDate = DateTime(dtBatas.year, dtBatas.month, dtBatas.day);
+
+      // Hitung selisih harinya
+      terlambatHari = todayDate.difference(batasDate).inDays;
+
       if (terlambatHari < 0) terlambatHari = 0;
     }
 
-    // RETURN LANGSUNG DI SINI, jangan buat factory lagi di dalam
     return PeminjamanModel(
       id: map['id_peminjaman'] ?? '',
       nama: namaUser,
@@ -58,12 +69,25 @@ class PeminjamanModel {
       batasKembali: batasFormatted,
       durasiTerlambat: terlambatHari,
       catatan: map['status'] == 'terlambat' ? 'Melewati batas kembali' : null,
-      idPeminjaman: map['id_peminjaman'] ?? '', // Samakan saja dengan id
+      idPeminjaman: map['id_peminjaman'] ?? '',
     );
   }
 
   static String _getMonthName(int month) {
-    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const months = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
     return months[month - 1];
   }
 }

@@ -155,8 +155,6 @@ class _DetailPeminjamanPageState extends State<DetailPeminjamanPage> {
           ),
         ),
       ),
-
-      // ================= BODY =================
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : detailData == null
