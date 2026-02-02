@@ -5,16 +5,15 @@ const String roboto = 'Roboto';
 
 class AlatHeaderCard extends StatelessWidget {
   final AlatModel? alat;
-  final int count; // Tambahkan parameter ini
+  final int count;
 
-  const AlatHeaderCard({super.key, this.alat, this.count = 0}); // Default 0
+  const AlatHeaderCard({super.key, this.alat, this.count = 0});
 
   @override
   Widget build(BuildContext context) {
     final String namaAlat = alat?.nama ?? 'Memuat...';
     final String kodeAlat = alat?.kode ?? '-';
     final String kategori = alat?.kategoriNama ?? 'Kategori';
-    // Gunakan parameter count, bukan alat?.jumlah
     final String totalUnit = count.toString();
 
     return Container(

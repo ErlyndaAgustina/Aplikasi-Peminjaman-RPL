@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/service.dart';
 
-class DeleteAlatDialog extends StatefulWidget { // Ubah ke StatefulWidget untuk handle loading
+class DeleteAlatDialog extends StatefulWidget {
   final String id;
   final String nama;
   final VoidCallback onDeleteSuccess;
@@ -23,11 +23,10 @@ class _DeleteAlatDialogState extends State<DeleteAlatDialog> {
   Future<void> _prosesHapus() async {
     setState(() => isLoading = true);
     try {
-      await AlatService().deleteAlat(widget.id); // Panggil service Supabase
-      widget.onDeleteSuccess(); // Refresh list di halaman utama
-      if (mounted) Navigator.pop(context); // Tutup dialog
-      
-      // Opsional: Kasih snackbar biar user tau udah berhasil
+      await AlatService().deleteAlat(widget.id);
+      widget.onDeleteSuccess();
+      if (mounted) Navigator.pop(context);
+    
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${widget.nama} berhasil dihapus')),
@@ -35,7 +34,6 @@ class _DeleteAlatDialogState extends State<DeleteAlatDialog> {
       }
     } catch (e) {
       setState(() => isLoading = false);
-      // Tampilkan error jika gagal
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal menghapus: $e'), backgroundColor: Colors.red),
@@ -56,7 +54,7 @@ class _DeleteAlatDialogState extends State<DeleteAlatDialog> {
             const Icon(Icons.delete_outline, color: Colors.red, size: 80),
             const SizedBox(height: 24),
             Text(
-              'Apakah yakin ingin menghapus\n${widget.nama}?', // Menampilkan nama alat biar jelas
+              'Apakah yakin ingin menghapus\n${widget.nama}?',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
@@ -91,7 +89,7 @@ class _DeleteAlatDialogState extends State<DeleteAlatDialog> {
           side: BorderSide(color: color),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        onPressed: isRed ? _prosesHapus : () => Navigator.pop(context), // Pasang fungsi hapus
+        onPressed: isRed ? _prosesHapus : () => Navigator.pop(context),
         child: Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
       ),
     );

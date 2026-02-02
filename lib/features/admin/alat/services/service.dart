@@ -4,8 +4,6 @@ import '../models/models.dart';
 
 class AlatService {
   final supabase = Supabase.instance.client;
-
-  /// AMBIL SEMUA ALAT (DENGAN JOIN KATEGORI)
   Future<List<AlatModel>> fetchAlat() async {
     try {
       final response = await Supabase.instance.client
@@ -55,7 +53,6 @@ class AlatService {
     await supabase.from('alat').delete().eq('id_alat', id);
   }
 
-  /// AMBIL UNIT BERDASARKAN ID ALAT
   Future<List<UnitAlatModel>> fetchUnitAlat(String idAlat) async {
     try {
       final res = await supabase
@@ -63,8 +60,6 @@ class AlatService {
           .select()
           .eq('id_alat', idAlat)
           .order('kode_unit', ascending: true);
-
-      // Map datanya ke model UnitAlatModel
       return res.map<UnitAlatModel>((e) => UnitAlatModel.fromMap(e)).toList();
     } catch (e) {
       print('Error fetchUnitAlat: $e');
@@ -72,7 +67,6 @@ class AlatService {
     }
   }
 
-  // Tambahkan di dalam class AlatService
   Future<void> insertUnitAlat(Map<String, dynamic> data) async {
     await supabase.from('alat_unit').insert(data);
   }

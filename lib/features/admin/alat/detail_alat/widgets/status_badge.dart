@@ -5,7 +5,6 @@ class StatusBadge extends StatelessWidget {
 
   const StatusBadge({super.key, required this.status});
 
-  // Kita buat helper agar pengecekan tidak sensitif huruf besar/kecil
   String get _cleanStatus => status.toLowerCase().trim();
 
   Color get bgColor {
@@ -17,7 +16,7 @@ class StatusBadge extends StatelessWidget {
       case 'rusak':
         return const Color.fromRGBO(255, 119, 119, 0.22);
       case 'perbaikan':
-        return const Color.fromRGBO(255, 237, 213, 1); // Kuning lembut
+        return const Color.fromRGBO(255, 237, 213, 1);
       default:
         return const Color.fromRGBO(243, 244, 246, 1);
     }
@@ -30,9 +29,9 @@ class StatusBadge extends StatelessWidget {
       case 'dipinjam':
         return const Color.fromRGBO(37, 99, 235, 1);
       case 'rusak':
-        return const Color.fromRGBO(255, 2, 2, 1); // Merah tegas
+        return const Color.fromRGBO(255, 2, 2, 1);
       case 'perbaikan':
-        return const Color.fromRGBO(235, 98, 26, 1); // Coklat/Gold
+        return const Color.fromRGBO(235, 98, 26, 1);
       default:
         return const Color.fromRGBO(107, 114, 128, 1);
     }
@@ -40,7 +39,6 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Agar tampilan teks di UI tetap rapi (Capital di depan)
     String displayStatus = _cleanStatus.isEmpty
         ? 'Unknown'
         : _cleanStatus[0].toUpperCase() + _cleanStatus.substring(1);
@@ -51,13 +49,13 @@ class StatusBadge extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(
           8,
-        ), // Dibuat sedikit lebih kotak agar modern
+        ),
       ),
       child: Text(
         displayStatus,
         style: TextStyle(
           fontSize: 11,
-          fontFamily: 'Roboto', // Sesuai desain kamu sebelumnya
+          fontFamily: 'Roboto',
           fontWeight: FontWeight.bold,
           color: textColor,
         ),

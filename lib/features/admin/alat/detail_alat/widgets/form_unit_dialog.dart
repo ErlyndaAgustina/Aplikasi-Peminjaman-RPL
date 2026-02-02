@@ -5,7 +5,7 @@ import '../models/model.dart';
 class FormUnitDialog extends StatefulWidget {
   final bool isEdit;
   final UnitAlatModel? unit;
-  final String? idAlat; // Tambahkan ini untuk unit baru
+  final String? idAlat;
   final VoidCallback onRefresh;
 
   const FormUnitDialog({
@@ -21,7 +21,7 @@ class FormUnitDialog extends StatefulWidget {
 }
 
 class _FormUnitDialogState extends State<FormUnitDialog> {
-  final _formKey = GlobalKey<FormState>(); // Tambahkan key untuk validasi
+  final _formKey = GlobalKey<FormState>();
   final _kodeController = TextEditingController();
   final _kondisiController = TextEditingController();
   String _selectedStatus = 'tersedia';
@@ -32,18 +32,16 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
     if (widget.isEdit && widget.unit != null) {
       _kodeController.text = widget.unit!.kodeUnit;
       _kondisiController.text = widget.unit!.kondisi;
-      // Pastikan status huruf kecil semua agar sesuai dengan constraint DB (status_valid)
       _selectedStatus = widget.unit!.status.toLowerCase();
     }
   }
 
   Future<void> _handleSave() async {
-    // Ambil data dari controller
     final data = {
       'id_alat': widget.idAlat ?? widget.unit?.idAlat,
       'kode_unit': _kodeController.text.trim(),
       'kondisi': _kondisiController.text.trim(),
-      'status': _selectedStatus, // Sudah sinkron dengan dropdown
+      'status': _selectedStatus,
     };
 
     if (data['id_alat'] == null) {
@@ -77,11 +75,9 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: SingleChildScrollView(
-          // Tambahkan agar tidak error pixel saat keyboard muncul
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -113,14 +109,12 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
                   ],
                 ),
               ),
-              // Form
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildLabel('Kode unit *'),
-                    // PERBAIKAN 1: Pakai controller
                     _buildTextField(
                       hint: 'Contoh: LTP-001-U1',
                       controller: _kodeController,
@@ -149,7 +143,6 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // PERBAIKAN 2: Panggil _handleSave
                         Expanded(
                           child: _buildButton(
                             widget.isEdit ? 'Simpan' : 'Tambah',
@@ -219,7 +212,6 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
         child: DropdownButton<String>(
           isExpanded: true,
           value: _selectedStatus,
-          // List ini harus SAMA PERSIS dengan constraint 'status_valid' di database kamu
           items: ['tersedia', 'dipinjam', 'rusak', 'perbaikan'].map((
             String val,
           ) {
@@ -227,7 +219,7 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
               value: val,
               child: Text(
                 val[0].toUpperCase() + val.substring(1),
-              ), // Biar tampilannya Cantik (Capital)
+              ),
             );
           }).toList(),
           onChanged: (value) {
@@ -258,7 +250,7 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        onPressed: onPress, // Panggil fungsi yang dipassing
+        onPressed: onPress,
         child: Text(
           text,
           style: TextStyle(

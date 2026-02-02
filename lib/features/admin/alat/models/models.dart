@@ -16,7 +16,6 @@ class AlatModel {
   });
 
   factory AlatModel.fromMap(Map<String, dynamic> map, {int? jumlahUnit}) {
-    // Mengambil data dari join query Supabase '*, kategori(*)'
     final kategori = map['kategori'] as Map<String, dynamic>?;
     return AlatModel(
       id: map['id_alat']?.toString() ?? '',

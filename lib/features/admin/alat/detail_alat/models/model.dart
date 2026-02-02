@@ -13,7 +13,6 @@ class UnitAlatModel {
     required this.status,
   });
 
-  // Gunakan fromMap supaya seragam dengan model lainnya
   factory UnitAlatModel.fromMap(Map<String, dynamic> map) {
     return UnitAlatModel(
       idUnit: map['id_unit'] ?? '',

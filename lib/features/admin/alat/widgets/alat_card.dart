@@ -14,8 +14,6 @@ class AlatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Pastikan variabel ini mengambil nilai jumlah dari model
-    // Jika di model namanya 'jumlahUnit', ganti alat.jumlah jadi alat.jumlahUnit
     final String totalUnit = alat.jumlah.toString(); 
 
     return Container(
@@ -51,17 +49,16 @@ class AlatCard extends StatelessWidget {
                         fontFamily: roboto,
                         fontSize: 14,
                         color: Color.fromRGBO(72, 141, 117, 1),
-                        fontWeight: FontWeight.w600, // Sedikit lebih tebal agar terbaca
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-              // BAGIAN JUMLAH UNIT
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color.fromRGBO(217, 253, 240, 0.5), // Green soft bg
+                  color: const Color.fromRGBO(217, 253, 240, 0.5),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -74,7 +71,7 @@ class AlatCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '$totalUnit Unit', // Menampilkan jumlah dinamis
+                      '$totalUnit Unit',
                       style: const TextStyle(
                         fontSize: 13,
                         fontFamily: roboto,
@@ -92,7 +89,6 @@ class AlatCard extends StatelessWidget {
 
           Row(
             children: [
-              // Badge Kategori
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
@@ -110,13 +106,12 @@ class AlatCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              // Action Buttons
               Row(
                 children: [
                   _iconBtn(
                     Icons.visibility,
                     const Color.fromRGBO(236, 254, 248, 1),
-                    iconColor: const Color.fromRGBO(62, 159, 127, 1), // Warna hijau brand
+                    iconColor: const Color.fromRGBO(62, 159, 127, 1),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -126,7 +121,7 @@ class AlatCard extends StatelessWidget {
                             alat: alat,
                           ),
                         ),
-                      ).then((_) => onRefresh()); // Refresh saat kembali dari detail
+                      ).then((_) => onRefresh());
                     },
                   ),
                   const SizedBox(width: 8),

@@ -8,7 +8,7 @@ const String roboto = 'Roboto';
 
 class UnitAlatCard extends StatelessWidget {
   final UnitAlatModel unit;
-  final VoidCallback onRefresh; // Tambahkan ini
+  final VoidCallback onRefresh;
 
   const UnitAlatCard({super.key, required this.unit, required this.onRefresh});
 
@@ -68,7 +68,7 @@ class UnitAlatCard extends StatelessWidget {
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
-                      color: Color.fromRGBO(72, 141, 117, 1), // hijau
+                      color: Color.fromRGBO(72, 141, 117, 1),
                       width: 1,
                     ),
                     shape: RoundedRectangleBorder(
@@ -104,7 +104,7 @@ class UnitAlatCard extends StatelessWidget {
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(
-                      color: Color.fromRGBO(255, 2, 2, 1), // merah
+                      color: Color.fromRGBO(255, 2, 2, 1),
                       width: 1,
                     ),
                     shape: RoundedRectangleBorder(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/service.dart'; // Pastikan path service-nya benar
-import '../models/models.dart'; // Pastikan path model-nya benar
+import '../services/service.dart';
+import '../models/models.dart';
 
 const String roboto = 'Roboto';
 
@@ -14,19 +14,19 @@ class KategoriFilter extends StatefulWidget {
 
 class _KategoriFilterState extends State<KategoriFilter> {
   String selectedKategori = 'Semua Status';
-  List<KategoriModel> listKategoriDB = []; // Untuk simpan data dari database
+  List<KategoriModel> listKategoriDB = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadKategori(); // Ambil data saat pertama kali muncul
+    _loadKategori();
   }
 
   Future<void> _loadKategori() async {
     try {
       final data = await AlatService()
-          .getKategori(); // Pastikan fungsi ini ada di service
+          .getKategori();
       setState(() {
         listKategoriDB = data;
         isLoading = false;
@@ -39,7 +39,6 @@ class _KategoriFilterState extends State<KategoriFilter> {
 
   @override
   Widget build(BuildContext context) {
-    // Gabungkan "Semua Status" dengan data dari database
     List<String> displayList = ['Semua Status'];
     displayList.addAll(listKategoriDB.map((k) => k.nama).toList());
 
@@ -63,7 +62,7 @@ class _KategoriFilterState extends State<KategoriFilter> {
         return displayList.map((kategori) {
           return PopupMenuItem<String>(
             value: kategori,
-            height: 40, // Sedikit lebih tinggi agar nyaman di-klik
+            height: 40,
             child: Text(
               kategori,
               style: const TextStyle(
@@ -77,7 +76,6 @@ class _KategoriFilterState extends State<KategoriFilter> {
         }).toList();
       },
       child: Container(
-        // Tambahkan width agar container punya ruang untuk mendorong spacer
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
@@ -86,10 +84,8 @@ class _KategoriFilterState extends State<KategoriFilter> {
           border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
         ),
         child: Row(
-          // MainAxisAlignment.spaceBetween juga membantu memastikan ujung ke ujung
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Icon Filter dan Text dibungkus Row lagi supaya nempel kiri
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -99,7 +95,6 @@ class _KategoriFilterState extends State<KategoriFilter> {
                   color: Color.fromRGBO(62, 159, 127, 1),
                 ),
                 const SizedBox(width: 8),
-                // Batasi lebar teks agar tidak menabrak icon kanan
                 ConstrainedBox(
                   constraints: BoxConstraints(
                     maxWidth: MediaQuery.of(context).size.width * 0.5,
@@ -117,7 +112,6 @@ class _KategoriFilterState extends State<KategoriFilter> {
                 ),
               ],
             ),
-            // Icon dropdown sekarang pasti di pojok kanan karena Row di atas mainAxisSize: min
             const Icon(
               Icons.keyboard_arrow_down,
               color: Color.fromRGBO(62, 159, 127, 1),
