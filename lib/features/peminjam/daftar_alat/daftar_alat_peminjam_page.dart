@@ -5,6 +5,7 @@ import '../sidebar/sidebar_peminjam.dart';
 import 'models/model.dart';
 import 'widgets/alat_card_peminjam.dart';
 import 'widgets/filter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 const String roboto = 'Roboto';
 
@@ -18,40 +19,59 @@ class DaftarAlatPeminjamPage extends StatefulWidget {
 }
 
 class _DaftarAlatPeminjamPageState extends State<DaftarAlatPeminjamPage> {
-  // 1. Tambahkan Controller dan variabel filter
+  final SupabaseClient supabase = Supabase.instance.client;
   final TextEditingController _searchController = TextEditingController();
-  List<AlatModel> _filteredAlatList = [];
+  
+  List<AlatModel> _allAlatFromDb = []; // Data asli dari DB
+  List<AlatModel> _filteredAlatList = []; // Data untuk tampilan
+  bool _isLoading = true;
   String _selectedKategori = 'Semua Status';
 
   @override
-void initState() {
-  super.initState();
-  // GUNAKAN List.from agar membuat salinan data dummy yang baru
-  // Ini mencegah error "undefined" pada beberapa engine JS di Browser
-  _filteredAlatList = List.from(alatListDummy); 
-  _searchController.addListener(_filterAlat);
-}
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fetchAlatData();
+    _searchController.addListener(_filterAlat);
   }
 
-  // 2. Fungsi Logika Pencarian dan Filter
+  // FUNGSI AMBIL DATA DARI SUPABASE
+  Future<void> _fetchAlatData() async {
+    try {
+      setState(() => _isLoading = true);
+      
+      // Query dengan join ke kategori dan filter unit yang 'tersedia' saja
+      final response = await supabase
+          .from('alat')
+          .select('''
+            id_alat, nama_alat, kode_alat,
+            kategori (nama_kategori),
+            alat_unit (id_unit)
+          ''')
+          .eq('alat_unit.status', 'tersedia'); // Hanya ambil unit yang tersedia
+
+      final List data = response as List;
+      
+      setState(() {
+        _allAlatFromDb = data.map((item) => AlatModel.fromSupabase(item)).toList();
+        // Hanya tampilkan alat yang jumlah unit tersedianya > 0
+        _allAlatFromDb = _allAlatFromDb.where((a) => a.jumlah > 0).toList();
+        _filteredAlatList = _allAlatFromDb;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error fetch data: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
   void _filterAlat() {
     String query = _searchController.text.toLowerCase();
     setState(() {
-      _filteredAlatList = alatListDummy.where((alat) {
-        bool matchesSearch =
-            alat.nama.toLowerCase().contains(query) ||
-            alat.kode.toLowerCase().contains(query);
-
-        // Sesuaikan pengecekan "Semua Status"
-        bool matchesKategori =
-            _selectedKategori == 'Semua Status' ||
-            alat.kategori == _selectedKategori;
-
+      _filteredAlatList = _allAlatFromDb.where((alat) {
+        bool matchesSearch = alat.nama.toLowerCase().contains(query) ||
+                             alat.kode.toLowerCase().contains(query);
+        bool matchesKategori = _selectedKategori == 'Semua Status' ||
+                               alat.kategori == _selectedKategori;
         return matchesSearch && matchesKategori;
       }).toList();
     });
@@ -216,20 +236,22 @@ void initState() {
           ),
 
           Expanded(
-            child: _filteredAlatList.isEmpty
-                ? const Center(child: Text("Alat tidak ditemukan"))
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    itemCount: _filteredAlatList
-                        .length, // 5. Gunakan list hasil filter
-                    itemBuilder: (context, index) {
-                      return AlatCardPeminjam(
-                        alat: _filteredAlatList[index],
-                        onTambah: () {
-                          setState(() {});
-                        },
-                      );
-                    },
+            child: _isLoading 
+                ? const Center(child: CircularProgressIndicator()) // Loading State
+                : RefreshIndicator(
+                    onRefresh: _fetchAlatData, // Bisa ditarik untuk refresh
+                    child: _filteredAlatList.isEmpty
+                        ? const Center(child: Text("Alat tersedia tidak ditemukan"))
+                        : ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            itemCount: _filteredAlatList.length,
+                            itemBuilder: (context, index) {
+                              return AlatCardPeminjam(
+                                alat: _filteredAlatList[index],
+                                onTambah: () => setState(() {}),
+                              );
+                            },
+                          ),
                   ),
           ),
         ],

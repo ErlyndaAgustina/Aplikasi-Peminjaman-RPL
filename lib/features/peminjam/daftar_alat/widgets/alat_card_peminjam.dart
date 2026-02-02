@@ -30,7 +30,6 @@ class _AlatCardPeminjamState extends State<AlatCardPeminjam> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Baris Atas: Nama, Kode, dan Jumlah Unit
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +56,6 @@ class _AlatCardPeminjamState extends State<AlatCardPeminjam> {
                   ),
                 ],
               ),
-              // Bagian Unit dengan Ikon Bin (Sesuai Gambar)
               Row(
                 children: [
                   const Icon(
@@ -80,10 +78,9 @@ class _AlatCardPeminjamState extends State<AlatCardPeminjam> {
             ],
           ),
           const SizedBox(height: 16),
-          // Baris Bawah: Kategori dan Tombol Pinjam
           Row(
             children: [
-              /// ===== KATEGORI =====
+
               Expanded(
                 child: Container(
                   height: 30,

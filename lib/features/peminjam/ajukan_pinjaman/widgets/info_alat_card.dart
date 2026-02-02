@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/model.dart';
 import '../../daftar_alat/models/model.dart';
 
 class InfoAlatCard extends StatelessWidget {

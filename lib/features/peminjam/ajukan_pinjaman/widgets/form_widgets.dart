@@ -14,6 +14,7 @@ class BuildTextField extends StatelessWidget {
   final bool isReadOnly;
   final bool isDate;
   final TextEditingController? controller;
+  final VoidCallback? onTap;
 
   const BuildTextField({
     super.key,
@@ -22,7 +23,8 @@ class BuildTextField extends StatelessWidget {
     this.icon,
     this.isReadOnly = false,
     this.isDate = false,
-    this.controller, required Function() onTap,
+    this.controller,
+    this.onTap,
   });
 
   @override
@@ -30,43 +32,12 @@ class BuildTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: roboto,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-            color: Color.fromRGBO(49, 47, 52, 1),
-          ),
-        ),
+        Text(label, style: const TextStyle()),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          readOnly: isReadOnly || isDate,
-          textAlignVertical: TextAlignVertical.center,
-          style: const TextStyle(
-            fontFamily: roboto,
-            fontSize: 12,
-            color: Color.fromRGBO(49, 47, 52, 1),
-          ),
-          onTap: isDate
-              ? () async {
-                  FocusScope.of(context).unfocus();
-
-                  final pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                    locale: const Locale('id', 'ID'),
-                  );
-
-                  if (pickedDate != null && controller != null) {
-                    controller!.text = formatTanggalIndonesia(pickedDate);
-                  }
-                }
-              : null,
-
+          readOnly: true,
+          onTap: onTap,
           decoration: InputDecoration(
             isDense: true,
             hintText: hint,

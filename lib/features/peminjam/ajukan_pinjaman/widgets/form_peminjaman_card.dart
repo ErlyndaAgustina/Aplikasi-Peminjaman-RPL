@@ -39,9 +39,8 @@ class FormPeminjamanCard extends StatelessWidget {
                   label: 'Tanggal Pinjam',
                   hint: 'dd/mm/yyyy',
                   icon: Icons.calendar_today_outlined,
-                  isDate: true,
                   controller: tanggalPinjamController,
-                  onTap: () => onPilihTanggal(true),
+                  onTap: () => onPilihTanggal(true), // Memanggil fungsi di Page
                 ),
               ),
               const SizedBox(width: 15),
@@ -50,9 +49,9 @@ class FormPeminjamanCard extends StatelessWidget {
                   label: 'Batas Kembali',
                   hint: 'dd/mm/yyyy',
                   icon: Icons.calendar_today_outlined,
-                  isDate: true,
                   controller: batasKembaliController,
-                  onTap: () => onPilihTanggal(false),
+                  onTap: () =>
+                      onPilihTanggal(false), // Memanggil fungsi di Page
                 ),
               ),
             ],
@@ -70,11 +69,13 @@ class FormPeminjamanCard extends StatelessWidget {
             onTap: () => onPilihJam(false),
           ),
           const SizedBox(height: 16),
+          // Di dalam FormPeminjamanCard
           BuildTextField(
             label: 'Batas Kembali',
             hint: '-',
-            isReadOnly: true,
-            controller: batasKembaliOtomatisController,
+            isReadOnly: true, // Pastikan ini true agar tidak bisa diedit manual
+            controller:
+                batasKembaliOtomatisController, // Harus pakai controller ini!
             onTap: () {},
           ),
         ],

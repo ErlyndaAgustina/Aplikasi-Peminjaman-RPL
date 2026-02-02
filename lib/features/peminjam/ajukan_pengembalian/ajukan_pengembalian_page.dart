@@ -3,10 +3,82 @@ import '../../profile/profile_page.dart';
 import '../ajukan_pengembalian/models/model.dart';
 import '../ajukan_pengembalian/widgets/pengembalian_cart.dart';
 import '../sidebar/sidebar_peminjam.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AjukanPengembalianPage extends StatelessWidget {
+class AjukanPengembalianPage extends StatefulWidget {
   const AjukanPengembalianPage({super.key});
   static const String roboto = 'Roboto';
+
+  @override
+  State<AjukanPengembalianPage> createState() => _AjukanPengembalianPageState();
+}
+
+class _AjukanPengembalianPageState extends State<AjukanPengembalianPage> {
+  final supabase = Supabase.instance.client;
+  List<TransaksiModel> daftarPeminjaman = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPeminjaman();
+  }
+  Future<void> fetchPeminjaman() async {
+    try {
+      final userId = supabase.auth.currentUser!.id;
+      final response = await supabase
+          .from('peminjaman')
+          .select('''
+          id_peminjaman,
+          kode_peminjaman,
+          tanggal_pinjam,
+          batas_kembali,
+          status,
+          jam_mulai,
+          detail_peminjaman (
+            alat_unit (
+              kode_unit,
+              alat (
+                nama_alat
+              )
+            )
+          )
+        ''')
+          .eq('id_user', userId)
+          .or('status.eq.dipinjam,status.eq.terlambat')
+          .order('created_at', ascending: false);
+      setState(() {
+        daftarPeminjaman = (response as List)
+            .map((data) => TransaksiModel.fromMap(data))
+            .toList();
+        isLoading = false;
+      });
+
+      print("Data berhasil diambil: ${daftarPeminjaman.length} item");
+    } catch (e) {
+      debugPrint('Error fetch detail: $e');
+      setState(() => isLoading = false);
+    }
+  }
+  Future<void> ajukanPengembalian(String idPeminjaman) async {
+    try {
+      await supabase
+          .from('peminjaman')
+          .update({
+            'status': 'menunggu',
+          })
+          .eq('id_peminjaman', idPeminjaman);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permintaan pengembalian dikirim!')),
+        );
+        fetchPeminjaman();
+      }
+    } catch (e) {
+      debugPrint('Error update: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +111,10 @@ class AjukanPengembalianPage extends StatelessWidget {
                   child: Builder(
                     builder: (context) => GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
-                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                      child: Icon(
+                        Icons.menu,
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
                     ),
                   ),
                 ),
@@ -52,7 +127,7 @@ class AjukanPengembalianPage extends StatelessWidget {
                       Text(
                         'Ajukan Pengembalian',
                         style: TextStyle(
-                          fontFamily: roboto,
+                          fontFamily: AjukanPengembalianPage.roboto,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Color.fromRGBO(49, 47, 52, 1),
@@ -62,7 +137,7 @@ class AjukanPengembalianPage extends StatelessWidget {
                       Text(
                         'RPLKIT • SMK Brantas Karangkates',
                         style: TextStyle(
-                          fontFamily: roboto,
+                          fontFamily: AjukanPengembalianPage.roboto,
                           fontSize: 12,
                           color: Color.fromRGBO(72, 141, 117, 1),
                         ),
@@ -94,18 +169,23 @@ class AjukanPengembalianPage extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: dummyPeminjaman.length,
-        itemBuilder: (context, index) => TransaksiCard(
-          transaksi: dummyPeminjaman[index],
-          onAjukanPengembalian: () {
-            _showPengembalianDialog(context, dummyPeminjaman[index]);
-          },
-        ),
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : daftarPeminjaman.isEmpty
+          ? const Center(child: Text("Tidak ada alat yang dipinjam"))
+          : RefreshIndicator(
+              onRefresh: fetchPeminjaman,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: daftarPeminjaman.length,
+                itemBuilder: (context, index) => TransaksiCard(
+                  transaksi: daftarPeminjaman[index],
+                  onAjukanPengembalian: () {
+                    _showPengembalianDialog(context, daftarPeminjaman[index]);
+                  },
+                ),
+              ),
+            ),
     );
   }
 
@@ -137,6 +217,7 @@ class AjukanPengembalianPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
+              ajukanPengembalian(transaksi.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Pengembalian berhasil diajukan'),

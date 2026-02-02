@@ -21,7 +21,6 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
   String _selectedRoleFilter = "Semua Role";
   final _supabase = Supabase.instance.client;
 
-  // Di ManajemenPenggunaPage
   void _openUserForm({UserModel? user}) {
     showDialog(
       context: context,
@@ -36,9 +35,6 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                 .toLowerCase();
 
             if (user != null) {
-              // --- BAGIAN EDIT PENGGUNA ---
-
-              // 1. Ambil auth_user_id dari database dulu (karena kita butuh ID Auth-nya)
               final userData = await _supabase
                   .from('users')
                   .select('auth_user_id')
@@ -47,7 +43,6 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
 
               final String targetAuthId = userData['auth_user_id'];
 
-              // 2. Update Email di Auth pakai RPC (Fungsi SQL yang kita buat tadi)
               if (user.email != emailBaru) {
                 await _supabase.rpc(
                   'admin_update_auth_email',
@@ -58,7 +53,6 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                 );
               }
 
-              // 3. Update data di tabel public.users
               await _supabase
                   .from('users')
                   .update({
@@ -70,7 +64,6 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
 
               _showSnackBar("Berhasil memperbarui data & email!", Colors.green);
             } else {
-              // --- BAGIAN TAMBAH PENGGUNA (Code kamu sudah cukup oke) ---
               final AuthResponse res = await _supabase.auth.signUp(
                 email: emailBaru,
                 password: data['password'],
@@ -87,7 +80,7 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                 _showSnackBar("Pengguna baru ditambahkan!", Colors.green);
               }
             }
-            setState(() {}); // Refresh UI
+            setState(() {});
           } catch (e) {
             _showSnackBar("Gagal: $e", Colors.red);
           }
@@ -124,7 +117,7 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: StreamBuilder<List<Map<String, dynamic>>>(
+              child: StreamBuilder<List<Map<String, dynamic>>>( //dipelajari apa itu streambuilder dan apa itu model
                 stream: _supabase.from('users').stream(primaryKey: ['id_user']),
                 builder: (context, snapshot) {
                   if (snapshot.hasError)
@@ -136,7 +129,6 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                       .map((m) => UserModel.fromMap(m))
                       .toList();
 
-                  // Logic Filter
                   final filtered = allUsers.where((u) {
                     final matchesSearch =
                         u.name.toLowerCase().contains(
@@ -161,15 +153,11 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                         onEdit: (selected) => _openUserForm(user: selected),
                         onDelete: (selected) async {
                           try {
-                            // 1. CEK VALIDASI: Apakah user punya data di tabel lain?
-                            // Cek di tabel peminjaman
                             final peminjamanData = await _supabase
                                 .from('peminjaman')
                                 .select('id_peminjaman')
                                 .eq('id_user', selected.idUser)
                                 .limit(1);
-
-                            // Cek di tabel log_aktivitas
                             final logData = await _supabase
                                 .from('log_aktivitas')
                                 .select('id_log')
@@ -182,10 +170,9 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                                 "Tidak dapat menghapus: Pengguna ini memiliki riwayat transaksi/aktivitas.",
                                 Colors.orange,
                               );
-                              return; // Berhenti di sini, jangan lanjut hapus
+                              return;
                             }
 
-                            // 2. Jika lolos validasi, ambil ID Auth-nya
                             final userData = await _supabase
                                 .from('users')
                                 .select('auth_user_id')
@@ -195,20 +182,17 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                             final String? authId = userData['auth_user_id'];
 
                             if (authId != null) {
-                              // 3. Hapus akun di Auth lewat RPC
                               await _supabase.rpc(
                                 'admin_delete_auth_user',
                                 params: {'target_auth_id': authId},
                               );
-
-                              // 4. Hapus data di tabel public
                               await _supabase
                                   .from('users')
                                   .delete()
                                   .eq('id_user', selected.idUser);
 
                               if (mounted) {
-                                setState(() {}); // Refresh UI
+                                setState(() {});
                                 _showSnackBar(
                                   "Pengguna berhasil dihapus!",
                                   Colors.green,
@@ -230,7 +214,6 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
       ),
     );
   }
-  // --- Sub-Widgets Layout ---
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return PreferredSize(

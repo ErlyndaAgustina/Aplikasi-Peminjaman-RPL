@@ -7,7 +7,16 @@ String? kategoriAlat;
 String? status;
 
 class FilterCard extends StatefulWidget {
-  const FilterCard({super.key});
+  final void Function({
+    required String jenis,
+    required String tglMulai,
+    required String tglAkhir,
+    required String kategori,
+    required String status,
+  })
+  onFilterChanged;
+
+  const FilterCard({super.key, required this.onFilterChanged});
 
   @override
   State<FilterCard> createState() => _FilterCardState();
@@ -20,7 +29,14 @@ class _FilterCardState extends State<FilterCard> {
 
   final TextEditingController startDateController = TextEditingController();
   final TextEditingController endDateController = TextEditingController();
-  late final Function(String jenis, String mulai, String akhir, String kat, String stat)? onFilterChanged;
+  late final Function(
+    String jenis,
+    String mulai,
+    String akhir,
+    String kat,
+    String stat,
+  )?
+  onFilterChanged;
 
   Future<void> _pickDate(
     BuildContext context,
@@ -74,6 +90,13 @@ class _FilterCardState extends State<FilterCard> {
             ],
             onChanged: (value) {
               setState(() => jenisLaporan = value!);
+              widget.onFilterChanged(
+                jenis: jenisLaporan,
+                tglMulai: startDateController.text,
+                tglAkhir: endDateController.text,
+                kategori: kategoriAlat,
+                status: status,
+              );
             },
           ),
 

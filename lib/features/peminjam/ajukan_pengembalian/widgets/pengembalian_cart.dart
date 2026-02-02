@@ -15,7 +15,8 @@ class TransaksiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isTerlambat = transaksi.status == StatusTransaksi.terlambat;
+    bool isTerlambat = transaksi.status == 'terlambat';
+    bool isMenunggu = transaksi.status == 'menunggu';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -90,18 +91,24 @@ class TransaksiCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    _StatusBadge(isTerlambat: isTerlambat),
+                    // Di dalam build TransaksiCard
+                    _StatusBadge(status: transaksi.status),
                   ],
                 ),
                 const SizedBox(height: 16),
+                // Di dalam TransaksiCard build...
                 Row(
                   children: [
                     _InfoItem(
                       icon: Icons.calendar_today_outlined,
-                      text: transaksi.tanggal,
+                      // Tinggal panggil getter dari model
+                      text: transaksi.tanggalFormatted,
                     ),
-                    const SizedBox(width: 95),
-                    _InfoItem(icon: Icons.access_time, text: transaksi.jam),
+                    const Spacer(), // Gunakan Spacer agar jaraknya otomatis penuh ke kanan
+                    _InfoItem(
+                      icon: Icons.access_time,
+                      text: transaksi.jam, // Sudah format "Jam ke X"
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -113,7 +120,7 @@ class TransaksiCard extends StatelessWidget {
                       text: "Batas Kembali",
                     ),
                     Text(
-                      transaksi.batasKembali,
+                      transaksi.batasKembaliFormatted, // Tanggal + Jam batas
                       style: const TextStyle(
                         fontFamily: roboto,
                         color: Color.fromRGBO(255, 2, 2, 1),
@@ -125,32 +132,34 @@ class TransaksiCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 // Button Ajukan Pengembalian
-                SizedBox(
-                  width: double.infinity,
-                  height: 35,
-                  child: ElevatedButton(
-                    onPressed: onAjukanPengembalian,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                if (transaksi.status == 'dipinjam' ||
+                    transaksi.status == 'terlambat')
+                  SizedBox(
+                    width: double.infinity,
+                    height: 35,
+                    child: ElevatedButton(
+                      onPressed: onAjukanPengembalian,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Ajukan Pengembalian',
-                      style: TextStyle(
-                        fontFamily: roboto,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                      child: const Text(
+                        'Ajukan Pengembalian',
+                        style: TextStyle(
+                          fontFamily: roboto,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -158,26 +167,49 @@ class TransaksiCard extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final bool isTerlambat;
-  const _StatusBadge({required this.isTerlambat});
+  final String status; // Ubah dari bool ke String
+  const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
+    Color bgColor;
+    Color textColor;
+    String label;
+
+    // Logic penentuan warna berdasarkan string status dari Supabase
+    switch (status) {
+      case 'terlambat':
+        bgColor = const Color.fromRGBO(255, 119, 119, 0.22);
+        textColor = const Color.fromRGBO(255, 2, 2, 1);
+        label = "Terlambat";
+        break;
+      case 'menunggu':
+        bgColor = Colors.orange.withOpacity(0.2);
+        textColor = Colors.orange.shade900;
+        label = "Menunggu";
+        break;
+      case 'dikembalikan':
+        bgColor = Colors.green.withOpacity(0.2);
+        textColor = Colors.green.shade900;
+        label = "Selesai";
+        break;
+      default: // Status 'dipinjam'
+        bgColor = const Color.fromRGBO(219, 234, 254, 1);
+        textColor = const Color.fromRGBO(37, 99, 235, 1);
+        label = "Dipinjam";
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: isTerlambat
-            ? const Color.fromRGBO(255, 119, 119, 0.22)
-            : const Color.fromRGBO(219, 234, 254, 1),
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        isTerlambat ? "Terlambat" : "Dipinjam",
+        label,
         style: TextStyle(
-          fontFamily: roboto,
-          color: isTerlambat
-              ? const Color.fromRGBO(255, 2, 2, 1)
-              : const Color.fromRGBO(37, 99, 235, 1),
+          fontFamily: 'Roboto',
+          color: textColor,
           fontSize: 12,
           fontWeight: FontWeight.w800,
         ),
