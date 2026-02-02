@@ -21,79 +21,99 @@ class _EditPengembalianDialogState extends State<EditPengembalianDialog> {
 
   // State untuk Dropdown
   int? _selectedJam;
+  String? _selectedUnitId;
   String? _selectedUnit;
   String _currentNamaAlat = '';
 
   // Data Dummy untuk Unit (Nanti bisa kamu ambil dari database)
-  final List<Map<String, String>> _unitList = [
-    {'kode': 'LPT-001-U1', 'nama': 'Macbook Pro'},
-    {'kode': 'LPT-002-U2', 'nama': 'Asus ROG'},
-    {'kode': 'LPT-003-U3', 'nama': 'Lenovo Thinkpad'},
+  List<Map<String, String>> _unitList = [
+    {'id': 'uuid', 'kode': 'UNIT-001', 'nama': 'Laptop'},
   ];
 
   @override
   void initState() {
     super.initState();
-    bool unitExists = _unitList.any(
-      (element) => element['kode'] == widget.data.kodeUnit,
-    );
-    if (unitExists) {
-      _selectedUnit = widget.data.kodeUnit;
-      _currentNamaAlat = widget.data.namaAlat;
-    } else {
-      // Kalau tidak ada, tambahkan unit dari database ke list agar tidak error
-      _unitList.add({
-        'kode': widget.data.kodeUnit,
-        'nama': widget.data.namaAlat,
-      });
-      _selectedUnit = widget.data.kodeUnit;
-      _currentNamaAlat = widget.data.namaAlat;
-    }
-    // Inisialisasi data awal dari model
+
+    // Inisialisasi controller
     _terlambatController = TextEditingController(
-      text: '${widget.data.terlambatMenit}',
+      text: widget.data.terlambatMenit.toString(),
     );
     _dendaTerlambatController = TextEditingController(
-      text: '${widget.data.dendaTerlambat}',
+      text: widget.data.dendaTerlambat.toString(),
     );
     _dendaRusakController = TextEditingController(
-      text: '${widget.data.dendaRusak}',
+      text: widget.data.dendaRusak.toString(),
     );
     _catatanController = TextEditingController(text: widget.data.catatan);
     _totalDendaController = TextEditingController(
-      text: '${widget.data.totalDenda}',
+      text: widget.data.totalDenda.toString(),
     );
 
+    // Set nilai awal (aman walau unit belum diload)
     _selectedJam = widget.data.jamSelesai;
+    _selectedUnitId = widget.data.idUnit;
     _selectedUnit = widget.data.kodeUnit;
     _currentNamaAlat = widget.data.namaAlat;
+
+    // Ambil unit dari Supabase
+    _fetchUnitFromSupabase();
   }
 
-  // Di dalam class _EditPengembalianDialogState
+  Future<void> _fetchUnitFromSupabase() async {
+    final supabase = Supabase.instance.client;
+
+    final res = await supabase
+        .from('alat_unit')
+        .select('id_unit, kode_unit, alat(nama_alat)')
+        .order('kode_unit');
+
+    final units = res.map<Map<String, String>>((item) {
+      return {
+        'id': item['id_unit'],
+        'kode': item['kode_unit'],
+        'nama': item['alat']['nama_alat'],
+      };
+    }).toList();
+
+    if (mounted) {
+      setState(() {
+        _unitList = units;
+        _selectedUnitId ??= widget.data.idUnit;
+        _selectedUnit ??= widget.data.kodeUnit;
+        _currentNamaAlat = widget.data.namaAlat;
+      });
+    }
+  }
 
   Future<void> _updatePengembalian() async {
     try {
       final supabase = Supabase.instance.client;
 
-      // Ambil nilai dari controller (pastikan diconvert ke int untuk angka)
-      final int terlambat = int.tryParse(_terlambatController.text) ?? 0;
-      final int dendaT = int.tryParse(_dendaTerlambatController.text) ?? 0;
-      final int dendaR = int.tryParse(_dendaRusakController.text) ?? 0;
-      final int total = int.tryParse(_totalDendaController.text) ?? 0;
-
-      await supabase
+      // 1. Lakukan update data pengembalian
+      // Gunakan .select() di akhir jika ingin mendapatkan data balikan untuk dicek isEmpty-nya
+      final response = await supabase
           .from('pengembalian')
           .update({
-            'terlambat_menit': terlambat,
-            'denda_terlambat': dendaT,
-            'denda_rusak': dendaR,
-            'total_denda': total,
+            'terlambat_menit': int.tryParse(_terlambatController.text) ?? 0,
+            'denda_terlambat':
+                int.tryParse(_dendaTerlambatController.text) ?? 0,
+            'denda_rusak': int.tryParse(_dendaRusakController.text) ?? 0,
+            'total_denda': int.tryParse(_totalDendaController.text) ?? 0,
             'catatan_kerusakan': _catatanController.text,
-            // Karena jam_selesai ada di tabel peminjaman,
-            // biasanya kita update foreign key atau data di tabel peminjaman jika diperlukan.
-            // Tapi untuk tabel pengembalian, kita update kolom yang ada saja dulu:
           })
-          .eq('id_pengembalian', widget.data.id); // ID diambil dari data model
+          .eq('id_pengembalian', widget.data.id)
+          .select(); // Tambahkan .select() agar mengembalikan List data
+
+      // 2. Update unit di detail_peminjaman
+      await supabase
+          .from('detail_peminjaman')
+          .update({'id_unit': _selectedUnitId})
+          .eq('id_detail', widget.data.idDetailPeminjaman);
+
+      // Sekarang response tidak null karena ada .select()
+      if (response.isEmpty) {
+        throw Exception('Update gagal: ID pengembalian tidak ditemukan');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,10 +122,7 @@ class _EditPengembalianDialogState extends State<EditPengembalianDialog> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(
-          context,
-          true,
-        ); // Kirim 'true' agar halaman utama tahu data berubah
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -334,6 +351,9 @@ class _EditPengembalianDialogState extends State<EditPengembalianDialog> {
   }
 
   Widget _dropdownJam() {
+    int? safeValue = (_selectedJam != null && _selectedJam! >= 1 && _selectedJam! <= 10) 
+                   ? _selectedJam 
+                   : null;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -342,7 +362,7 @@ class _EditPengembalianDialogState extends State<EditPengembalianDialog> {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int>(
-          value: _selectedJam,
+          value: safeValue,
           isExpanded: true,
           items: List.generate(
             10,
@@ -356,6 +376,11 @@ class _EditPengembalianDialogState extends State<EditPengembalianDialog> {
 
   // 1. Tambahkan fungsi helper untuk membuat tampilan kotak hijau isi Nama + Kode
   Widget _buildUnitDisplayBox() {
+    bool itemExists = _unitList.any((e) => e['kode'] == _selectedUnit);
+    if (!itemExists && _selectedUnit != null) {
+  // Jangan biarkan error, pastikan Dropdown punya setidaknya satu item yang cocok
+  // atau biarkan value-nya null sementara
+}
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -392,27 +417,25 @@ class _EditPengembalianDialogState extends State<EditPengembalianDialog> {
           ),
           // Dropdown Icon & Button yang "transparan" di atas kotak
           DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              icon: const Icon(
-                Icons.keyboard_arrow_down,
-                color: Color(0xFF3E9F7F),
-              ),
-              items: _unitList.map((u) {
-                return DropdownMenuItem(
-                  value: u['kode'],
-                  child: Text(u['kode']!, style: const TextStyle(fontSize: 13)),
-                );
-              }).toList(),
-              onChanged: (v) {
-                setState(() {
-                  _selectedUnit = v;
-                  _currentNamaAlat = _unitList.firstWhere(
-                    (e) => e['kode'] == v,
-                  )['nama']!;
-                });
-              },
-            ),
-          ),
+  child: DropdownButton<String>(
+    value: itemExists ? _selectedUnit : null, // ✅ Cegah error merah
+    icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF3E9F7F)),
+    items: _unitList.map((u) {
+      return DropdownMenuItem(
+        value: u['kode'],
+        child: Text(u['kode']!, style: const TextStyle(fontSize: 13)),
+      );
+    }).toList(),
+    onChanged: (v) {
+      final selected = _unitList.firstWhere((e) => e['kode'] == v);
+      setState(() {
+        _selectedUnit = selected['kode'];
+        _selectedUnitId = selected['id'];
+        _currentNamaAlat = selected['nama']!;
+      });
+    },
+  ),
+),
         ],
       ),
     );

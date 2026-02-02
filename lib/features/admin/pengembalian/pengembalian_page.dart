@@ -32,46 +32,56 @@ class _PengembalianPageState extends State<PengembalianPage> {
   // Fungsi READ
   // Di dalam file pengembalian_page.dart, fungsi _fetchData
   // Di pengembalian_page.dart
-Future<void> _fetchData() async {
-  // Jangan hapus isLoading biar user tahu data lagi ditarik ulang
-  setState(() => _isLoading = true); 
-  
-  try {
-    // Query ini sudah sangar karena narik sampai ke akar-akarnya (detail_peminjaman)
-    final response = await _supabase
-        .from('pengembalian')
-        .select('''
-          *,
-          peminjaman:id_peminjaman (
-            kode_peminjaman,
-            jam_selesai,
-            users:id_user ( nama ),
-            detail_peminjaman (
-              alat_unit (
-                kode_unit,
-                alat ( nama_alat )
-              )
-            )
+  Future<void> _fetchData() async {
+    // Jangan hapus isLoading biar user tahu data lagi ditarik ulang
+    setState(() => _isLoading = true);
+
+    try {
+      // Query ini sudah sangar karena narik sampai ke akar-akarnya (detail_peminjaman)
+      // Di dalam file pengembalian_page.dart
+final res = await Supabase.instance.client
+    .from('pengembalian')
+    .select('''
+      id_pengembalian,
+      tanggal_kembali,
+      terlambat_menit,
+      denda_terlambat,
+      denda_rusak,
+      total_denda,
+      catatan_kerusakan,
+      peminjaman (
+        kode_peminjaman,
+        jam_selesai,
+        users (nama),
+        detail_peminjaman (
+          id_detail,
+          alat_unit (
+            id_unit,
+            kode_unit,
+            alat (nama_alat)
           )
-        ''')
-        .order('created_at', ascending: false);
+        )
+      )
+    ''')
+    .order('created_at', ascending: false);
+      ;
 
-    final data = (response as List)
-        .map((e) => PengembalianModel.fromJson(e))
-        .toList();
+      final data = (res as List)
+          .map((e) => PengembalianModel.fromJson(e))
+          .toList();
 
-    if (mounted) {
-      setState(() {
-        _allData = data;
-        _filteredData = data;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _allData = data;
+          _filteredData = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+      print("Error: $e");
     }
-  } catch (e) {
-    if (mounted) setState(() => _isLoading = false);
-    print("Error: $e");
   }
-}
 
   void _filterSearch(String query) {
     setState(() {
