@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 
 enum StatusPengembalian { dikembalikan, selesai }
 
@@ -7,6 +9,7 @@ class PengembalianModel {
   final String kode;
   final String tanggal;
   final String jam;
+  final String batasKembali;
   final List<String> alat;
   final StatusPengembalian status;
 
@@ -16,6 +19,7 @@ class PengembalianModel {
     required this.kode,
     required this.tanggal,
     required this.jam,
+    required this.batasKembali,
     required this.alat,
     required this.status,
   });
@@ -34,7 +38,9 @@ class PengembalianModel {
     id: map['id_peminjaman'].toString(),
     nama: map['users']?['nama'] ?? 'Tanpa Nama', 
     kode: map['kode_peminjaman'] ?? '-',
-    tanggal: map['tanggal_pinjam'] ?? '-',
+    tanggal: formatTanggalIndo(map['tanggal_pinjam']),
+    batasKembali: formatTanggalIndo(map['batas_kembali']), 
+    
     jam: "Jam ke ${map['jam_mulai']}",
     alat: daftarNamaAlat,
     status: map['status'] == 'selesai' 
@@ -45,4 +51,15 @@ class PengembalianModel {
 
   String get statusLabel => status == StatusPengembalian.selesai ? 'Selesai' : 'Menunggu';
   String get buttonText => status == StatusPengembalian.dikembalikan ? 'Proses Pengembalian' : 'Lihat Detail';
+}
+
+String formatTanggalIndo(String? tanggalRaw) {
+  if (tanggalRaw == null || tanggalRaw == '-') return '-';
+  
+  try {
+    DateTime date = DateTime.parse(tanggalRaw);
+    return DateFormat('d MMMM y, HH:mm', 'id_ID').format(date);
+  } catch (e) {
+    return tanggalRaw;
+  }
 }

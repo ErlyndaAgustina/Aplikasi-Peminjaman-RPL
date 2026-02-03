@@ -18,14 +18,14 @@ class PersetujuanPengembalianPage extends StatefulWidget {
 class _PersetujuanPengembalianPageState
     extends State<PersetujuanPengembalianPage>
     with SingleTickerProviderStateMixin {
-      final supabase = Supabase.instance.client;
+  final supabase = Supabase.instance.client;
   late final TabController _tabController;
 
   Future<List<PengembalianModel>> fetchDataPetugas(String statusFilter) async {
-  try {
-    final response = await supabase
-        .from('peminjaman')
-        .select('''
+    try {
+      final response = await supabase
+          .from('peminjaman')
+          .select('''
           *,
           users ( nama ), 
           detail_peminjaman (
@@ -34,16 +34,16 @@ class _PersetujuanPengembalianPageState
             )
           )
         ''')
-        .eq('status', statusFilter)
-        .order('created_at', ascending: false);
+          .eq('status', statusFilter)
+          .order('created_at', ascending: false);
 
-    final data = response as List;
-    return data.map((item) => PengembalianModel.fromMap(item)).toList();
-  } catch (e) {
-    print('Error Supabase: $e');
-    return [];
+      final data = response as List;
+      return data.map((item) => PengembalianModel.fromMap(item)).toList();
+    } catch (e) {
+      print('Error Supabase: $e');
+      return [];
+    }
   }
-}
 
   @override
   void initState() {
@@ -60,6 +60,11 @@ class _PersetujuanPengembalianPageState
     _tabController.dispose();
     super.dispose();
   }
+
+  void _refreshData() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,34 +196,37 @@ class _PersetujuanPengembalianPageState
               ),
             ),
           ),
-
-          /// ================= ISI TAB =================
           Expanded(
             child: TabBarView(
-  controller: _tabController,
-  children: [
-    // Tab 1: Status 'dikembalikan' (yang barusan diajukan peminjam)
-    FutureBuilder<List<PengembalianModel>>(
-      future: fetchDataPetugas('dikembalikan'),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return _TabContent(data: snapshot.data ?? []);
-      },
-    ),
-    // Tab 2: Status 'selesai'
-    FutureBuilder<List<PengembalianModel>>(
-      future: fetchDataPetugas('selesai'),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return _TabContent(data: snapshot.data ?? []);
-      },
-    ),
-  ],
-),
+              controller: _tabController,
+              children: [
+                // Tab 1: Menunggu
+                FutureBuilder<List<PengembalianModel>>(
+                  future: fetchDataPetugas('dikembalikan'),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return _TabContent(
+                      data: snapshot.data ?? [],
+                      onRefresh: _refreshData,
+                    );
+                  },
+                ),
+                FutureBuilder<List<PengembalianModel>>(
+                  future: fetchDataPetugas('selesai'),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return _TabContent(
+                      data: snapshot.data ?? [],
+                      onRefresh: _refreshData,
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -228,56 +236,62 @@ class _PersetujuanPengembalianPageState
 
 class _TabContent extends StatelessWidget {
   final List<PengembalianModel> data;
-  const _TabContent({required this.data});
+  final VoidCallback onRefresh;
+  const _TabContent({required this.data, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        /// ===== JUDUL DI ATAS CARD =====
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Daftar Pengembalian',
-                  style: TextStyle(
-                    fontFamily: roboto,
-                    color: Color.fromRGBO(49, 47, 52, 1),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+    return RefreshIndicator(
+      onRefresh: () async => onRefresh(),
+      child: CustomScrollView( 
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Daftar Pengembalian',
+                    style: TextStyle(
+                      fontFamily: roboto,
+                      color: Color.fromRGBO(49, 47, 52, 1),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Tinjau dan proses permohonan pengembalian alat RPL.',
-                  style: TextStyle(
-                    fontFamily: roboto,
-                    fontSize: 13,
-                    color: Color.fromRGBO(72, 141, 117, 1),
+                  SizedBox(height: 2),
+                  Text(
+                    'Tinjau dan proses permohonan pengembalian alat RPL.',
+                    style: TextStyle(
+                      fontFamily: roboto,
+                      fontSize: 13,
+                      color: Color.fromRGBO(72, 141, 117, 1),
+                    ),
                   ),
-                ),
-                SizedBox(height: 16),
-              ],
+                  SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
-        ),
-
-        /// ===== LIST CARD =====
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          sliver: SliverList.separated(
-            itemCount: data.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              return PengembalianCard(data: data[index]);
-            },
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            sliver: SliverList.separated(
+              itemCount: data.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                return PengembalianCard(
+                  data: data[index],
+                  onRefresh: onRefresh, 
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

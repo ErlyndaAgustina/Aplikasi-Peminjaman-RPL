@@ -4,7 +4,7 @@ class PeminjamanModel {
   final String tanggal;
   final String jam;
   final List<String> alat;
-  final String status; // menunggu | disetujui | ditolak
+  final String status;
 
   PeminjamanModel({
     required this.nama,

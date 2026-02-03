@@ -14,40 +14,65 @@ class AlatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String totalUnit = alat.jumlah.toString(); 
+    final String totalUnit = alat.jumlah.toString();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
       ),
-      child: Column(
+      child: Column( // Main wrapper
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 1. BOX GAMBAR (KIRI)
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: alat.imageUrl != null && alat.imageUrl!.isNotEmpty
+                      ? Image.network(
+                          alat.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.image_not_supported, color: Colors.grey),
+                        )
+                      : const Icon(Icons.image, color: Colors.grey, size: 30),
+                ),
+              ),
+              const SizedBox(width: 15),
+
+              // 2. INFO ALAT (TENGAH)
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       alat.nama,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontFamily: roboto,
                         fontWeight: FontWeight.w800,
-                        fontSize: 18,
+                        fontSize: 16,
                         color: Color.fromRGBO(49, 47, 52, 1),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       'Kode: ${alat.kode}',
                       style: const TextStyle(
                         fontFamily: roboto,
-                        fontSize: 14,
+                        fontSize: 13,
                         color: Color.fromRGBO(72, 141, 117, 1),
                         fontWeight: FontWeight.w600,
                       ),
@@ -55,57 +80,19 @@ class AlatCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(217, 253, 240, 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.inventory_2_outlined,
-                      size: 16,
-                      color: Color.fromRGBO(1, 85, 56, 1),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$totalUnit Unit',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontFamily: roboto,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromRGBO(1, 85, 56, 1),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+
+              // 3. BADGE UNIT (KANAN ATAS)
+              _buildUnitBadge(totalUnit),
             ],
           ),
-
+          
           const SizedBox(height: 16),
-
+          
+          // 4. BARIS BAWAH (KATEGORI & TOMBOL AKSI)
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(217, 253, 240, 1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  alat.kategoriNama,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontFamily: roboto,
-                    color: Color.fromRGBO(1, 85, 56, 1),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const Spacer(),
+              _buildKategoriBadge(alat.kategoriNama),
               Row(
                 children: [
                   _iconBtn(
@@ -116,10 +103,7 @@ class AlatCard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => DetailAlatPage(
-                            id: alat.id,
-                            alat: alat,
-                          ),
+                          builder: (context) => DetailAlatPage(id: alat.id, alat: alat),
                         ),
                       ).then((_) => onRefresh());
                     },
@@ -165,23 +149,63 @@ class AlatCard extends StatelessWidget {
     );
   }
 
-  Widget _iconBtn(
-    IconData icon,
-    Color bg, {
-    Color iconColor = Colors.black,
-    VoidCallback? onTap,
-  }) {
+  // --- WIDGET HELPER ---
+
+  Widget _iconBtn(IconData icon, Color bg, {Color iconColor = Colors.black, VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(8),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+        child: Icon(icon, size: 18, color: iconColor),
+      ),
+    );
+  }
+
+  Widget _buildUnitBadge(String unit) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(217, 253, 240, 0.5),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.inventory_2_outlined, size: 14, color: Color.fromRGBO(1, 85, 56, 1)),
+          const SizedBox(width: 4),
+          Text(
+            '$unit Unit',
+            style: const TextStyle(
+              fontSize: 12,
+              fontFamily: roboto,
+              fontWeight: FontWeight.bold,
+              color: Color.fromRGBO(1, 85, 56, 1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKategoriBadge(String nama) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(217, 253, 240, 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        nama,
+        style: const TextStyle(
+          fontSize: 12,
+          fontFamily: roboto,
+          color: Color.fromRGBO(1, 85, 56, 1),
+          fontWeight: FontWeight.bold,
         ),
-        child: Icon(icon, size: 16, color: iconColor),
       ),
     );
   }
 }
+

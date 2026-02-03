@@ -5,6 +5,7 @@ class AlatModel {
   final String kategoriId;
   final String kategoriNama;
   final int jumlah;
+  final String? imageUrl;
 
   AlatModel({
     required this.id,
@@ -13,6 +14,7 @@ class AlatModel {
     required this.kategoriId,
     required this.kategoriNama,
     required this.jumlah,
+    this.imageUrl,
   });
 
   factory AlatModel.fromMap(Map<String, dynamic> map, {int? jumlahUnit}) {
@@ -24,6 +26,7 @@ class AlatModel {
       kategoriId: map['id_kategori']?.toString() ?? '',
       kategoriNama: kategori?['nama_kategori'] ?? 'Tanpa Kategori',
       jumlah: jumlahUnit ?? map['jumlah'] ?? 0,
+      imageUrl: map['image_url'],
     );
   }
 }

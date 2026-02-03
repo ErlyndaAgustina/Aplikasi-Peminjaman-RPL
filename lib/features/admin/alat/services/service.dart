@@ -1,6 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../detail_alat/models/model.dart';
 import '../models/models.dart';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AlatService {
   final supabase = Supabase.instance.client;
@@ -21,6 +24,33 @@ class AlatService {
     } catch (e) {
       print("Error Fetch Alat: $e");
       return [];
+    }
+  }
+
+  Future<String?> uploadImage(XFile pickedFile) async {
+    try {
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final path = 'photos/$fileName';
+
+      if (kIsWeb) {
+        final bytes = await pickedFile.readAsBytes();
+        await supabase.storage.from('alat_images').uploadBinary(
+              path,
+              bytes,
+              fileOptions: const FileOptions(contentType: 'image/jpeg'),
+            );
+      } else {
+        // Karena sudah di-import di atas pakai alias 'io', panggilnya io.File
+        await supabase.storage.from('alat_images').upload(
+              path,
+              io.File(pickedFile.path),
+            );
+      }
+
+      return supabase.storage.from('alat_images').getPublicUrl(path);
+    } catch (e) {
+      print('Gagal upload: $e');
+      return null;
     }
   }
 

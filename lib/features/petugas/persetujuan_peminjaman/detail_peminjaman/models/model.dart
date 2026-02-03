@@ -73,12 +73,10 @@ class UnitPinjamanModel {
     required this.kode,
   });
 }
-
-/// 🔥 GANTI STATUS DI SINI UNTUK TES UI
 final dummyDetailPeminjaman = DetailPeminjamanModel(
   nama: 'Budi Santoso',
   kode: 'PJM-20260114-dcb',
-  status: StatusPeminjaman.disetujui,
+  status: StatusPeminjaman.menunggu,
   tanggalPinjam: '2 Januari 2026',
   jamPelajaran: '2 - 3',
   batasKembali: '2 Januari 2026, 09.00',

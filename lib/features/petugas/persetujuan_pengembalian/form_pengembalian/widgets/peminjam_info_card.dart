@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/model.dart'; // Pastikan PengembalianModel memiliki field yang sesuai
+import '../models/model.dart';
 
 class PeminjamInfoCard extends StatelessWidget {
   final PengembalianModel data;
@@ -13,7 +13,7 @@ class PeminjamInfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20), // Corner lebih bulat
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: const Color.fromRGBO(205, 238, 226, 1),
           width: 1,
@@ -22,7 +22,6 @@ class PeminjamInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // BARIS ATAS: Nama dan Kode Peminjaman
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -30,7 +29,7 @@ class PeminjamInfoCard extends StatelessWidget {
                 data.nama,
                 style: const TextStyle(
                   fontFamily: roboto,
-                  fontSize: 18, // Ukuran lebih besar
+                  fontSize: 18,
                   fontWeight: FontWeight.w800,
                   color: Color.fromRGBO(49, 47, 52, 1),
                 ),
@@ -41,14 +40,13 @@ class PeminjamInfoCard extends StatelessWidget {
                   fontFamily: roboto,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color.fromRGBO(72, 141, 117, 1), // Warna hijau kode
+                  color: Color.fromRGBO(72, 141, 117, 1),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 15),
 
-          // BARIS TENGAH: Tanggal Pinjam dan Jam
           Row(
             children: [
               // Tanggal
@@ -99,7 +97,6 @@ class PeminjamInfoCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // BARIS BAWAH: Batas Kembali
           Row(
             children: [
               Expanded(

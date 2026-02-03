@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../profile/profile_page.dart';
 import '../daftar_alat/models/model.dart';
-import 'widgets/form_widgets.dart';
 import 'widgets/info_alat_card.dart';
 import 'widgets/form_peminjaman_card.dart';
 
@@ -47,19 +46,6 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
     super.dispose();
   }
 
-  void _hitungBatasKembaliOtomatis() {
-    if (_batasKembali != null && _jamPelajaranAkhir != null) {
-      String tanggal = DateFormat(
-        'dd MMMM yyyy',
-        'id_ID',
-      ).format(_batasKembali!);
-      setState(() {
-        _batasKembaliOtomatisController.text = '$tanggal - $_jamPelajaranAkhir';
-      });
-    } else {
-      setState(() => _batasKembaliOtomatisController.text = '-');
-    }
-  }
 
   String _hitungEstimasiJam(int urutanJam) {
     DateTime baseTime = DateTime(2026, 1, 1, 7, 0);
@@ -72,7 +58,6 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
       int urutan = _extractJamPelajaran(_jamPelajaranAkhir);
       String jamMenit = _hitungEstimasiJam(urutan);
 
-      // Format: 02 Februari 2026 (08:20 WIB)
       String tanggalFormat = DateFormat(
         'dd MMMM yyyy',
         'id_ID',
@@ -117,7 +102,7 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
       final String idUserInternal = userData['id_user'];
       String kodePinjam = "PJM-${DateTime.now().millisecondsSinceEpoch}";
 
-final peminjamanResponse = await supabase
+      final peminjamanResponse = await supabase
           .from('peminjaman')
           .insert({
             'id_user': idUserInternal,
@@ -129,14 +114,14 @@ final peminjamanResponse = await supabase
             'jam_selesai': _extractJamPelajaran(_jamPelajaranAkhir),
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .select('id_peminjaman') // 🟢 PAKSA hanya ambil ID, jangan biarkan Supabase narik kolom lain
+          .select(
+            'id_peminjaman',
+          )
           .single();
 
       final String idPeminjaman = peminjamanResponse['id_peminjaman'];
 
-      // LOOP KERANJANG
       for (var alat in keranjangAlat) {
-        // Kita cari unit yang statusnya 'tersedia'
         final unitData = await supabase
             .from('alat_unit')
             .select('id_unit')
@@ -171,6 +156,7 @@ final peminjamanResponse = await supabase
       _showSnackBar(pesanError, isError: true);
     }
   }
+
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -209,7 +195,6 @@ final peminjamanResponse = await supabase
           _tanggalPinjamController.text = DateFormat(
             'dd/MM/yyyy',
           ).format(picked);
-          // Defaultkan batas kembali sama dengan tanggal pinjam
           _batasKembali = picked;
           _batasKembaliController.text = DateFormat(
             'dd/MM/yyyy',
@@ -433,7 +418,7 @@ final peminjamanResponse = await supabase
             );
             return;
           }
-          _submitPeminjaman(); // Panggil fungsi Supabase
+          _submitPeminjaman();
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color.fromRGBO(62, 159, 127, 1),

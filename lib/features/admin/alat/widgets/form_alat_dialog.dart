@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // Penting untuk cek Web
 import '../models/models.dart';
 import '../services/service.dart';
 
@@ -25,6 +28,10 @@ class _FormAlatDialogState extends State<FormAlatDialog> {
   List<KategoriModel> daftarKategori = [];
   bool isLoading = false;
 
+  XFile? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+  String? _currentImageUrl;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +39,7 @@ class _FormAlatDialogState extends State<FormAlatDialog> {
       _namaController.text = widget.alat!.nama;
       _kodeController.text = widget.alat!.kode;
       selectedKategoriId = widget.alat!.kategoriId;
+      _currentImageUrl = widget.alat!.imageUrl;
     }
     loadKategori();
   }
@@ -41,26 +49,53 @@ class _FormAlatDialogState extends State<FormAlatDialog> {
     setState(() => daftarKategori = data);
   }
 
+  Future<void> _pickImage() async {
+  final XFile? pickedFile = await _picker.pickImage(
+    source: ImageSource.gallery,
+    imageQuality: 70,
+  );
+
+  if (pickedFile != null) {
+    setState(() {
+      _imageFile = pickedFile;
+    });
+  }
+}
+
   Future<void> simpan() async {
     if (_namaController.text.isEmpty || selectedKategoriId == null) return;
 
     setState(() => isLoading = true);
-    final data = {
-      'nama_alat': _namaController.text,
-      'kode_alat': _kodeController.text,
-      'id_kategori': selectedKategoriId,
-    };
 
     try {
+      String? finalImageUrl = _currentImageUrl;
+
+      // Jika ada gambar baru yang dipilih
+      if (_imageFile != null) {
+        finalImageUrl = await AlatService().uploadImage(_imageFile!);
+      }
+
+      final data = {
+        'nama_alat': _namaController.text,
+        'kode_alat': _kodeController.text,
+        'id_kategori': selectedKategoriId,
+        'image_url': finalImageUrl,
+      };
+
       if (widget.isEdit) {
         await AlatService().updateAlat(widget.alat!.id, data);
       } else {
         await AlatService().insertAlat(data);
       }
+
       widget.onRefresh();
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -70,21 +105,25 @@ class _FormAlatDialogState extends State<FormAlatDialog> {
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // HEADER
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              color: primaryGreen,
+              decoration: const BoxDecoration(
+                color: primaryGreen,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
               child: Row(
                 children: [
                   Icon(
                     widget.isEdit ? Icons.edit : Icons.add,
                     color: Colors.white,
-                    size: 22,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -95,33 +134,46 @@ class _FormAlatDialogState extends State<FormAlatDialog> {
                     ),
                   ),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
                   ),
                 ],
               ),
             ),
-            // BODY FORM
+
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildLabel('Foto Alat'),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: double.infinity,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color.fromRGBO(205, 238, 226, 1),
+                        ),
+                      ),
+                      child: _buildImagePreview(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   _buildLabel('Nama Alat *'),
                   TextField(
                     controller: _namaController,
-                    decoration: _inputDecoration('Nama'),
+                    decoration: _inputDecoration('Contoh: Laptop MacBook Pro'),
                   ),
                   const SizedBox(height: 16),
                   _buildLabel('Kode Alat *'),
                   TextField(
                     controller: _kodeController,
-                    decoration: _inputDecoration('Kode'),
+                    decoration: _inputDecoration('Contoh: LPT-001'),
                   ),
                   const SizedBox(height: 16),
                   _buildLabel('Kategori *'),
@@ -149,6 +201,37 @@ class _FormAlatDialogState extends State<FormAlatDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildImagePreview() {
+    if (_imageFile != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: kIsWeb
+            ? Image.network(_imageFile!.path, fit: BoxFit.cover)
+            : Image.network(_imageFile!.path, fit: BoxFit.cover),
+      );
+    }
+
+    if (_currentImageUrl != null && _currentImageUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(_currentImageUrl!, fit: BoxFit.cover),
+      );
+    }
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: const [
+        Icon(
+          Icons.add_a_photo,
+          size: 40,
+          color: Color.fromRGBO(62, 159, 127, 1),
+        ),
+        SizedBox(height: 8),
+        Text('Ketuk untuk pilih foto', style: TextStyle(color: Colors.grey)),
+      ],
     );
   }
 

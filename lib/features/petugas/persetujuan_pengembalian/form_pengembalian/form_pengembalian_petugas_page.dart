@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../profile/profile_page.dart';
 import 'models/model.dart';
 import 'widgets/peminjam_info_card.dart';
@@ -19,7 +20,8 @@ class FormPengembalianPage extends StatefulWidget {
 }
 
 class _FormPengembalianPageState extends State<FormPengembalianPage> {
-  final data = dummyPengembalian;
+  bool isLoading = true;
+  PengembalianModel? dataModel;
 
   late TextEditingController tanggalCtrl;
   late TextEditingController jamCtrl;
@@ -29,6 +31,7 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
   int dendaTerlambat = 0;
   int terlambatMenit = 0;
   int dendaKerusakanValue = 0;
+  int tarifDendaPerMenit = 500;
 
   @override
   void initState() {
@@ -39,6 +42,7 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
     catatanCtrl = TextEditingController();
 
     dendaCtrl.addListener(_onDendaChanged);
+    _loadDataPeminjaman();
   }
 
   @override
@@ -52,10 +56,103 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
 
   void _onDendaChanged() {
     setState(() {
-      // Menangkap inputan denda kerusakan dari user
       dendaKerusakanValue =
           int.tryParse(dendaCtrl.text.replaceAll('.', '')) ?? 0;
     });
+  }
+
+  void _hitungOtomatis() {
+  if (dataModel == null) return;
+
+  try {
+    DateTime deadline = DateTime.parse(dataModel!.batasKembaliRaw);
+    String datePart = tanggalCtrl.text.split('/').reversed.join('-');
+    String timePart = jamCtrl.text;
+    
+    // Jadikan objek DateTime
+    DateTime waktuKembaliUser = DateTime.parse("$datePart $timePart:00");
+
+    if (waktuKembaliUser.isAfter(deadline)) {
+      Duration selisih = waktuKembaliUser.difference(deadline);
+      setState(() {
+        terlambatMenit = selisih.inMinutes;
+        dendaTerlambat = terlambatMenit * tarifDendaPerMenit;
+      });
+    } else {
+      setState(() {
+        terlambatMenit = 0;
+        dendaTerlambat = 0;
+      });
+    }
+  } catch (e) {
+    debugPrint("Gagal hitung denda: $e");
+  }
+}
+
+  Future<void> _loadDataPeminjaman() async {
+    try {
+      final res = await Supabase.instance.client
+          .from('peminjaman')
+          .select(
+            '*, users(nama), detail_peminjaman(alat_unit(alat(nama_alat), kode_unit))',
+          )
+          .eq('id_peminjaman', widget.idPeminjaman)
+          .single();
+
+      setState(() {
+        // Masukkan hasil query ke model
+        dataModel = PengembalianModel.fromSupabase(res);
+        isLoading = false;
+
+        // Set default input
+        tanggalCtrl.text =
+            "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
+        jamCtrl.text =
+            "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}";
+      });
+      _hitungOtomatis();
+    } catch (e) {
+      debugPrint("Error load: $e");
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _simpan() async {
+    if (dataModel == null) return;
+
+    setState(() => isLoading = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final int totalDendaFinal = dendaTerlambat + dendaKerusakanValue;
+      await supabase.from('pengembalian').insert({
+        'id_peminjaman': widget.idPeminjaman,
+        'tanggal_kembali': DateTime.now().toIso8601String(),
+        'terlambat_menit': terlambatMenit,
+        'denda_terlambat': dendaTerlambat,
+        'denda_rusak': dendaKerusakanValue,
+        'total_denda': totalDendaFinal,
+        'catatan_kerusakan': catatanCtrl.text,
+      });
+
+      await supabase
+          .from('peminjaman')
+          .update({'status': 'selesai'})
+          .eq('id_peminjaman', widget.idPeminjaman);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Data Berhasil Disimpan!')),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   Future<void> _pilihTanggal() async {
@@ -79,6 +176,7 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
         tanggalCtrl.text =
             '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
       });
+      _hitungOtomatis();
     }
   }
 
@@ -101,21 +199,23 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
         jamCtrl.text =
             '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       });
+      _hitungOtomatis();
     }
-  }
-
-  void _simpan() {
-    // Logic simpan data
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Data pengembalian berhasil disimpan'),
-        backgroundColor: Color(0xFF3E9F7F),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF3E9F7F)),
+        ),
+      );
+    }
+
+    if (dataModel == null) {
+      return const Scaffold(body: Center(child: Text("Data tidak ditemukan")));
+    }
     return Scaffold(
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
       appBar: PreferredSize(
@@ -208,14 +308,16 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PeminjamInfoCard(data: data),
+            PeminjamInfoCard(data: dataModel!),
             const SizedBox(height: 20),
 
             const Text(
               'Input Data Kembali',
-              style: TextStyle(fontFamily: roboto,
+              style: TextStyle(
+                fontFamily: roboto,
                 fontWeight: FontWeight.w800,
-                fontSize: 20,),
+                fontSize: 20,
+              ),
             ),
             const SizedBox(height: 5),
 
@@ -263,12 +365,12 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
             ),
             const SizedBox(height: 16),
 
-            if (tanggalCtrl.text.isNotEmpty && jamCtrl.text.isNotEmpty)
+            if (dataModel != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
                 child: AutoCalculateBox(
-                  terlambatMenit: 1200,
-                  dendaTerlambat: 50000,
+                  terlambatMenit: terlambatMenit,
+                  dendaTerlambat: dendaTerlambat,
                   dendaKerusakan: dendaKerusakanValue,
                 ),
               ),
@@ -283,7 +385,7 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
             ),
             const SizedBox(height: 8),
 
-            ...data.units.map(
+            ...dataModel!.units.map(
               (u) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: UnitDipinjamCard(unit: u),

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class UnitDipinjam {
   final String nama;
   final String kode;
@@ -14,6 +16,7 @@ class PengembalianModel {
   final String tanggalPinjam;
   final String jamPelajaran;
   final String batasKembali;
+  final String batasKembaliRaw;
 
   String tanggalKembali;
   String jamKembali;
@@ -35,19 +38,43 @@ class PengembalianModel {
     this.dendaTerlambat = 0,
     this.catatan = '',
     required this.units,
+    required this.batasKembaliRaw,
   });
 
   int get totalDenda => dendaKerusakan + dendaTerlambat;
+
+  factory PengembalianModel.fromSupabase(Map<String, dynamic> map) {
+    final user = map['users'] as Map<String, dynamic>?;
+    final details = map['detail_peminjaman'] as List? ?? [];
+    
+    List<UnitDipinjam> mappedUnits = details.map((d) {
+      final unit = d['alat_unit'];
+      final alat = unit?['alat'];
+      return UnitDipinjam(
+        nama: alat?['nama_alat'] ?? 'Tidak diketahui',
+        kode: unit?['kode_unit'] ?? '-',
+      );
+    }).toList();
+
+    return PengembalianModel(
+      nama: user?['nama'] ?? 'Tanpa Nama',
+      kode: map['kode_peminjaman'] ?? '-',
+      // PERBAIKAN DI SINI:
+      batasKembaliRaw: map['batas_kembali'] ?? DateTime.now().toIso8601String(),
+      tanggalPinjam: _formatTanggalIndo(map['tanggal_pinjam']),
+      batasKembali: _formatTanggalIndo(map['batas_kembali']),
+      jamPelajaran: "Jam ke ${map['jam_mulai'] ?? '?'}",
+      units: mappedUnits,
+    );
+  }
 }
 
-final dummyPengembalian = PengembalianModel(
-  nama: 'Siti Aminah',
-  kode: 'PJM-20260114-gh6t',
-  tanggalPinjam: '2 Januari 2026',
-  jamPelajaran: 'Jam ke 2',
-  batasKembali: '2 Januari 2026, 09.00',
-  units: [
-    UnitDipinjam(nama: 'Macbook Pro', kode: 'Unit: LPT-001-U1'),
-    UnitDipinjam(nama: 'Arduino', kode: 'Unit: LPT-002-A1'),
-  ],
-);
+String _formatTanggalIndo(String? tanggalRaw) {
+  if (tanggalRaw == null || tanggalRaw == '-' || tanggalRaw.isEmpty) return '-';
+  try {
+    DateTime date = DateTime.parse(tanggalRaw);
+    return DateFormat('d MMMM y, HH:mm', 'id_ID').format(date);
+  } catch (e) {
+    return tanggalRaw;
+  }
+}

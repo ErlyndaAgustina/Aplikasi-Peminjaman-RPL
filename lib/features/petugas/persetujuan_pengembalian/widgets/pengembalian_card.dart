@@ -7,7 +7,7 @@ const String roboto = 'Roboto';
 
 class PengembalianCard extends StatelessWidget {
   final PengembalianModel data;
-  const PengembalianCard({super.key, required this.data});
+  const PengembalianCard({super.key, required this.data, required VoidCallback onRefresh});
 
   Color get statusColor => data.status == StatusPengembalian.selesai
       ? const Color.fromRGBO(235, 98, 26, 1)
@@ -98,18 +98,19 @@ class PengembalianCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Row(
-            children: const [
-              Icon(Icons.assignment_return, size: 14),
-              SizedBox(width: 6),
-              Text(
+            children: [
+              const Icon(Icons.assignment_return, size: 14),
+              const SizedBox(width: 6),
+              const Text(
                 'Batas Kembali',
                 style: TextStyle(fontFamily: roboto, fontSize: 12),
               ),
-              SizedBox(width: 50),
+              const SizedBox(width: 50),
               Expanded(
                 child: Text(
-                  '2 Januari 2024, 09.00',
-                  style: TextStyle(
+                  // UBAH BAGIAN INI:
+                  data.batasKembali,
+                  style: const TextStyle(
                     fontFamily: roboto,
                     fontSize: 12,
                     color: Color.fromRGBO(255, 2, 2, 1),
