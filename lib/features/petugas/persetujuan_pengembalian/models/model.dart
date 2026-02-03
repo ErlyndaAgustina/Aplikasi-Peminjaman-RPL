@@ -41,7 +41,7 @@ class PengembalianModel {
     tanggal: formatTanggalIndo(map['tanggal_pinjam']),
     batasKembali: formatTanggalIndo(map['batas_kembali']), 
     
-    jam: "Jam ke ${map['jam_mulai']}",
+    jam: "Jam ${map['jam_mulai']} - ${map['jam_selesai']}",
     alat: daftarNamaAlat,
     status: map['status'] == 'selesai' 
         ? StatusPengembalian.selesai 

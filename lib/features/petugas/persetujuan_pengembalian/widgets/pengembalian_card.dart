@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../detail_pengembalian/form_pengembalian_petugas_page.dart';
+import '../detail_pengembalian/detail_pengembalian_petugas_page.dart';
 import '../form_pengembalian/form_pengembalian_petugas_page.dart';
 import '../models/model.dart';
 
@@ -7,7 +7,8 @@ const String roboto = 'Roboto';
 
 class PengembalianCard extends StatelessWidget {
   final PengembalianModel data;
-  const PengembalianCard({super.key, required this.data, required VoidCallback onRefresh});
+  final VoidCallback onRefresh;
+  const PengembalianCard({super.key, required this.data, required this.onRefresh});
 
   Color get statusColor => data.status == StatusPengembalian.selesai
       ? const Color.fromRGBO(235, 98, 26, 1)
@@ -167,8 +168,10 @@ class PengembalianCard extends StatelessWidget {
                       builder: (_) =>
                           FormPengembalianPage(idPeminjaman: data.id),
                     ),
-                  );
-                } else {
+                  ).then((value) {
+      if (value == true) onRefresh();
+    });
+  } else {
                   Navigator.push(
                     context,
                     MaterialPageRoute(

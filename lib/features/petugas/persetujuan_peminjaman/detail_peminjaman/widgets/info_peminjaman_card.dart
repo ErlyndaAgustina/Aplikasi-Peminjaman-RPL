@@ -72,11 +72,11 @@ class InfoPeminjamanCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          _row(Icons.calendar_month, 'Tanggal Pinjam', data.tanggalPinjam),
+          _row(Icons.calendar_month, 'Tanggal Pinjam', data.tanggalPinjamFormat),
           const SizedBox(height: 6),
           _row(Icons.schedule, 'Jam Pelajaran', data.jamPelajaran),
           const SizedBox(height: 6),
-          _row(Icons.assignment_return, 'Batas Kembali', data.batasKembali),
+          _row(Icons.assignment_return, 'Batas Kembali', data.batasKembaliFormat),
         ],
       ),
     );

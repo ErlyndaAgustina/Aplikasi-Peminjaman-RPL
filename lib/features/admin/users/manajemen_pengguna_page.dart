@@ -117,13 +117,15 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: StreamBuilder<List<Map<String, dynamic>>>( //dipelajari apa itu streambuilder dan apa itu model
+              child: StreamBuilder<List<Map<String, dynamic>>>(
                 stream: _supabase.from('users').stream(primaryKey: ['id_user']),
                 builder: (context, snapshot) {
-                  if (snapshot.hasError)
+                  if (snapshot.hasError) {
                     return Center(child: Text("Error: ${snapshot.error}"));
-                  if (!snapshot.hasData)
+                  }
+                  if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
+                  }
 
                   final allUsers = snapshot.data!
                       .map((m) => UserModel.fromMap(m))
@@ -182,7 +184,7 @@ class _ManajemenPenggunaPageState extends State<ManajemenPenggunaPage> {
                             final String? authId = userData['auth_user_id'];
 
                             if (authId != null) {
-                              await _supabase.rpc(
+                              await _supabase.rpc(// remote procedure call
                                 'admin_delete_auth_user',
                                 params: {'target_auth_id': authId},
                               );

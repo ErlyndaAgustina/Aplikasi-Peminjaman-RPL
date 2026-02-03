@@ -15,14 +15,119 @@ class LoginCard extends StatefulWidget {
 
 class _LoginCardState extends State<LoginCard> {
   bool _obscurePassword = true;
+  bool _isLoading = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  // Variabel untuk menyimpan pesan error di bawah field
+  String? _errorEmail;
+  String? _errorPassword;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // 1. Fungsi Validasi Input Manual
+  bool _validateInputs() {
+    setState(() {
+      _errorEmail = null;
+      _errorPassword = null;
+    });
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    bool isValid = true;
+
+    if (email.isEmpty) {
+      _errorEmail = 'Email tidak boleh kosong';
+      isValid = false;
+    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      _errorEmail = 'Format email tidak sesuai';
+      isValid = false;
+    }
+
+    if (password.isEmpty) {
+      _errorPassword = 'Password tidak boleh kosong';
+      isValid = false;
+    } else if (password.length < 6) {
+      _errorPassword = 'Password minimal 6 karakter';
+      isValid = false;
+    }
+
+    setState(() {});
+    return isValid;
+  }
+
+  // 2. Fungsi Eksekusi Login ke Supabase
+  Future<void> _handleLogin() async {
+    if (!_validateInputs()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      final user = authResponse.user;
+      if (user == null) return;
+
+      final data = await Supabase.instance.client
+          .from('users')
+          .select('role')
+          .eq('auth_user_id', user.id)
+          .single();
+      
+      final role = data['role'];
+
+      if (!mounted) return;
+
+      // Berhasil login
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login Berhasil!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      if (role == 'admin') {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardAdminPage()));
+      } else if (role == 'petugas') {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPetugasPage()));
+      } else {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPeminjamPage()));
+      }
+    } on AuthException catch (e) {
+      setState(() {
+        // Validasi Password salah vs Email salah dari server
+        if (e.message.toLowerCase().contains('invalid login credentials')) {
+          _errorEmail = 'Email mungkin salah';
+          _errorPassword = 'Password mungkin salah';
+        } else if (e.message.toLowerCase().contains('email not found')) {
+          _errorEmail = 'Email tidak ditemukan';
+        } else {
+          _errorEmail = e.message;
+        }
+      });
+    } catch (e) {
+      // Validasi Jaringan tidak tersedia
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Jaringan tidak tersedia atau gangguan server'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -67,6 +172,7 @@ class _LoginCardState extends State<LoginCard> {
           const SizedBox(height: 6),
           TextField(
             controller: _emailController,
+            onChanged: (_) => setState(() => _errorEmail = null),
             style: TextStyle(
               fontFamily: widget.roboto,
               fontSize: 14,
@@ -75,6 +181,7 @@ class _LoginCardState extends State<LoginCard> {
             ),
             decoration: InputDecoration(
               hintText: 'nama@brantas.sch.id',
+              errorText: _errorEmail,
               hintStyle: TextStyle(
                 fontFamily: widget.roboto,
                 fontSize: 13,
@@ -93,6 +200,7 @@ class _LoginCardState extends State<LoginCard> {
           TextField(
             controller: _passwordController,
             obscureText: _obscurePassword,
+            onChanged: (_) => setState(() => _errorPassword = null),
             style: TextStyle(
               fontFamily: widget.roboto,
               fontSize: 14,
@@ -101,6 +209,7 @@ class _LoginCardState extends State<LoginCard> {
             ),
             decoration: InputDecoration(
               hintText: 'masukkan password anda',
+              errorText: _errorPassword,
               hintStyle: TextStyle(
                 fontFamily: widget.roboto,
                 fontSize: 13,
@@ -128,32 +237,21 @@ class _LoginCardState extends State<LoginCard> {
                 backgroundColor: const Color.fromRGBO(62, 159, 127, 1),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () async {
-                try {
-                  final authResponse = await Supabase.instance.client.auth.signInWithPassword(
-                    email: _emailController.text.trim(),
-                    password: _passwordController.text.trim(),
-                  );
-                  final user = authResponse.user;
-                  if (user == null) return;
-                  final data = await Supabase.instance.client.from('users').select('role').eq('auth_user_id', user.id).single();
-                  final role = data['role'];
-                  if (!context.mounted) return;
-                  if (role == 'admin') {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardAdminPage()));
-                  } else if (role == 'petugas') {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPetugasPage()));
-                  } else if (role == 'peminjam') {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPeminjamPage()));
-                  }
-                } catch (e) {
-                  debugPrint('Login error: $e');
-                }
-              },
-              child: Text(
-                'Masuk ke Akun',
-                style: TextStyle(fontFamily: widget.roboto, fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
+              onPressed: _isLoading ? null : _handleLogin,
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      'Masuk ke Akun',
+                      style: TextStyle(
+                          fontFamily: widget.roboto,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
             ),
           ),
           const SizedBox(height: 15),
@@ -163,7 +261,11 @@ class _LoginCardState extends State<LoginCard> {
               children: [
                 Text(
                   'AKSES TERSEDIA UNTUK',
-                  style: TextStyle(fontFamily: widget.roboto, fontSize: 11, color: const Color.fromRGBO(7, 131, 88, 1), fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontFamily: widget.roboto,
+                      fontSize: 11,
+                      color: const Color.fromRGBO(7, 131, 88, 1),
+                      fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 6),
                 Wrap(

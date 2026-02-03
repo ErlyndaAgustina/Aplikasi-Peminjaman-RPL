@@ -63,7 +63,7 @@ class PengembalianModel {
       batasKembaliRaw: map['batas_kembali'] ?? DateTime.now().toIso8601String(),
       tanggalPinjam: _formatTanggalIndo(map['tanggal_pinjam']),
       batasKembali: _formatTanggalIndo(map['batas_kembali']),
-      jamPelajaran: "Jam ke ${map['jam_mulai'] ?? '?'}",
+      jamPelajaran: "Jam ${map['jam_mulai']} - ${map['jam_selesai']}",
       units: mappedUnits,
     );
   }

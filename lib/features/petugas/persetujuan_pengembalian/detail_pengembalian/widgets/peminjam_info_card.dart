@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/model.dart'; // Pastikan PengembalianModel memiliki field yang sesuai
 
 class PeminjamInfoCard extends StatelessWidget {
-  final PengembalianModel data;
+  final DetailPengembalianModel data;
   const PeminjamInfoCard({super.key, required this.data});
 
   @override

@@ -54,24 +54,36 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
   }
 
   void _updateBatasKembaliOtomatis() {
-    if (_batasKembali != null && _jamPelajaranAkhir != null) {
-      int urutan = _extractJamPelajaran(_jamPelajaranAkhir);
-      String jamMenit = _hitungEstimasiJam(urutan);
+  if (_batasKembali != null && _jamPelajaranAkhir != null) {
+    int urutan = _extractJamPelajaran(_jamPelajaranAkhir);
+    
+    // 1. Hitung jam dan menit berdasarkan urutan jam pelajaran
+    // Base time jam 07:00 + (urutan * 40 menit)
+    int totalMenit = urutan * 40;
+    int jam = 7 + (totalMenit ~/ 60);
+    int menit = totalMenit % 60;
 
-      String tanggalFormat = DateFormat(
-        'dd MMMM yyyy',
-        'id_ID',
-      ).format(_batasKembali!);
+    // 2. UPDATE objek _batasKembali dengan jam & menit hasil perhitungan
+    setState(() {
+      _batasKembali = DateTime(
+        _batasKembali!.year,
+        _batasKembali!.month,
+        _batasKembali!.day,
+        jam,
+        menit,
+      );
 
-      setState(() {
-        _batasKembaliOtomatisController.text = "$tanggalFormat ($jamMenit WIB)";
-      });
-    } else {
-      setState(() {
-        _batasKembaliOtomatisController.text = "-";
-      });
-    }
+      // Format untuk UI tetap sama
+      String jamMenitStr = DateFormat('HH:mm').format(_batasKembali!);
+      String tanggalFormat = DateFormat('dd MMMM yyyy', 'id_ID').format(_batasKembali!);
+      _batasKembaliOtomatisController.text = "$tanggalFormat ($jamMenitStr WIB)";
+    });
+  } else {
+    setState(() {
+      _batasKembaliOtomatisController.text = "-";
+    });
   }
+}
 
   Future<void> _submitPeminjaman() async {
     final supabase = Supabase.instance.client;
@@ -145,11 +157,14 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
       }
 
       if (mounted) {
-        Navigator.pop(context);
-        _showSnackBar('Permintaan peminjaman berhasil terkirim!');
-        setState(() => keranjangAlat.clear());
-        Navigator.pop(context);
-      }
+  Navigator.pop(context); // Tutup loading dialog
+  _showSnackBar('Permintaan peminjaman berhasil terkirim!');
+  setState(() => keranjangAlat.clear());
+
+  // UBAH BAGIAN INI:
+  // Kirim nilai 'true' saat pop agar halaman daftar tahu harus refresh
+  Navigator.pop(context, true); 
+}
     } catch (e) {
       if (mounted) Navigator.pop(context);
       String pesanError = e.toString().replaceAll("Exception: ", "");

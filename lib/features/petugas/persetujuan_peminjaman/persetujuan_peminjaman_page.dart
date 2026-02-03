@@ -3,6 +3,7 @@ import '../../profile/profile_page.dart';
 import '../persetujuan_peminjaman/models/model.dart';
 import '../persetujuan_peminjaman/widgets/peminjaman_card.dart';
 import '../sidebar/sidebar_petugas.dart';
+import '../persetujuan_peminjaman/services/peminjaman_service.dart';
 
 const String roboto = 'Roboto';
 
@@ -34,27 +35,6 @@ class _PersetujuanPeminjamanPageState extends State<PersetujuanPeminjamanPage>
     super.dispose();
   }
 
-  List<PeminjamanModel> getData(String status) {
-    return [
-      PeminjamanModel(
-        nama: 'Siti Aminah',
-        kode: 'PJM-20260114-g6ht',
-        tanggal: '2 Januari 2026',
-        jam: 'Jam ke 2',
-        alat: ['Macbook Pro', 'Arduino'],
-        status: status,
-      ),
-      PeminjamanModel(
-        nama: 'Dewangga Putra',
-        kode: 'PJM-20260114-g6hf',
-        tanggal: '3 Januari 2026',
-        jam: 'Jam ke 2 - 4',
-        alat: ['Arduino'],
-        status: status,
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,7 +50,6 @@ class _PersetujuanPeminjamanPageState extends State<PersetujuanPeminjamanPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// HEADER
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                     child: Row(
@@ -84,7 +63,7 @@ class _PersetujuanPeminjamanPageState extends State<PersetujuanPeminjamanPage>
                           child: Builder(
                             builder: (context) => GestureDetector(
                               onTap: () => Scaffold.of(context).openDrawer(),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.menu,
                                 color: Color.fromRGBO(62, 159, 127, 1),
                               ),
@@ -118,65 +97,60 @@ class _PersetujuanPeminjamanPageState extends State<PersetujuanPeminjamanPage>
                           ),
                         ),
                         GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfilePenggunaPage(),
-                      ),
-                    );
-                  },
-                  child: const CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                    child: Icon(
-                      Icons.person,
-                      color: Color.fromRGBO(62, 159, 127, 1),
-                      size: 20,
-                    ),
-                  ),
-                ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ProfilePenggunaPage(),
+                              ),
+                            );
+                          },
+                          child: const CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Color.fromRGBO(
+                              217,
+                              253,
+                              240,
+                              0.49,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: Color.fromRGBO(62, 159, 127, 1),
+                              size: 20,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-
-                  /// GARIS PEMISAH
                   const Divider(
                     height: 1,
                     thickness: 1,
                     color: Color.fromRGBO(216, 199, 246, 1),
                   ),
-
-                  /// TAB BAR
-                  Padding(
-                    padding: const EdgeInsets.only(),
-                    child: TabBar(
-                      controller: _tabController,
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      labelStyle: TextStyle(
-                        fontFamily: roboto,
-                        fontWeight: FontWeight.w600,
-                        color: Color.fromRGBO(1, 85, 56, 1),
-                      ),
-                      unselectedLabelStyle: TextStyle(
-                        fontFamily: roboto,
-                        fontWeight: FontWeight.w500,
-                        color: Color.fromRGBO(93, 93, 93, 1),
-                      ),
-                      indicatorColor: const Color.fromRGBO(1, 85, 56, 1),
-                      indicatorWeight: 1,
-                      indicatorPadding: const EdgeInsets.only(bottom: 6),
-                      splashFactory: NoSplash.splashFactory,
-                      overlayColor: MaterialStateProperty.all(
-                        Colors.transparent,
-                      ),
-                      tabs: const [
-                        Tab(text: 'Menunggu Persetujuan'),
-                        Tab(text: 'Disetujui'),
-                        Tab(text: 'Ditolak'),
-                      ],
+                  TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    labelStyle: const TextStyle(
+                      fontFamily: roboto,
+                      fontWeight: FontWeight.w600,
                     ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontFamily: roboto,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    labelColor: const Color.fromRGBO(1, 85, 56, 1),
+                    unselectedLabelColor: const Color.fromRGBO(93, 93, 93, 1),
+                    indicatorColor: const Color.fromRGBO(1, 85, 56, 1),
+                    indicatorWeight: 1,
+                    indicatorPadding: const EdgeInsets.only(bottom: 6),
+                    tabs: const [
+                      Tab(text: 'Menunggu Persetujuan'),
+                      Tab(text: 'Disetujui'),
+                      Tab(text: 'Ditolak'),
+                    ],
                   ),
                 ],
               ),
@@ -188,10 +162,12 @@ class _PersetujuanPeminjamanPageState extends State<PersetujuanPeminjamanPage>
             child: TabBarView(
               controller: _tabController,
               physics: const BouncingScrollPhysics(),
-              children: [
-                _TabContent(data: getData('menunggu')),
-                _TabContent(data: getData('disetujui')),
-                _TabContent(data: getData('ditolak')),
+              children: const [
+                _TabContent(
+                  status: 'menunggu',
+                ), // Pakai status, bukan getData manual
+                _TabContent(status: 'dipinjam'),
+                _TabContent(status: 'ditolak'),
               ],
             ),
           ),
@@ -201,58 +177,90 @@ class _PersetujuanPeminjamanPageState extends State<PersetujuanPeminjamanPage>
   }
 }
 
-class _TabContent extends StatelessWidget {
-  final List<PeminjamanModel> data;
-  const _TabContent({required this.data});
+class _TabContent extends StatefulWidget {
+  final String status;
+  const _TabContent({required this.status});
 
   @override
-  Widget build(BuildContext context) {
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        /// ===== JUDUL DI ATAS CARD =====
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Daftar Peminjaman',
-                  style: TextStyle(
-                    fontFamily: roboto,
-                    color: Color.fromRGBO(49, 47, 52, 1),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Tinjau dan proses permohonan peminjaman alat RPL.',
-                  style: TextStyle(
-                    fontFamily: roboto,
-                    fontSize: 13,
-                    color: Color.fromRGBO(72, 141, 117, 1),
-                  ),
-                ),
-                SizedBox(height: 16),
-              ],
-            ),
-          ),
-        ),
+  State<_TabContent> createState() => _TabContentState();
+}
 
-        /// ===== LIST CARD =====
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          sliver: SliverList.separated(
-            itemCount: data.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              return PeminjamanCard(data: data[index]);
-            },
-          ),
-        ),
-      ],
+class _TabContentState extends State<_TabContent> {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<PeminjamanModel>>(
+      // Memanggil fungsi fetch dari service
+      future: PeminjamanService().fetchPeminjaman(widget.status),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: Color.fromRGBO(62, 159, 127, 1),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text("Terjadi kesalahan: ${snapshot.error}"));
+        }
+
+        final List<PeminjamanModel> data = snapshot.data ?? [];
+
+        if (data.isEmpty) {
+          return const Center(child: Text("Tidak ada data peminjaman"));
+        }
+
+        return CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Daftar Peminjaman',
+                      style: TextStyle(
+                        fontFamily: roboto,
+                        color: Color.fromRGBO(49, 47, 52, 1),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Tinjau dan proses permohonan peminjaman alat RPL.',
+                      style: TextStyle(
+                        fontFamily: roboto,
+                        fontSize: 13,
+                        color: Color.fromRGBO(72, 141, 117, 1),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              sliver: SliverList.separated(
+                itemCount: data.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  return PeminjamanCard(
+                    data: data[index],
+                    onRefresh: () {
+                      // Ini yang bikin data ter-update otomatis setelah klik Setuju/Tolak
+                      setState(() {});
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

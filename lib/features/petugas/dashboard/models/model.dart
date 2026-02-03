@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 
-enum StatusTransaksi {
-  dipinjam,
-  selesai,
-  terlambat,
-}
-
 class TransaksiModel {
   final String namaPeminjam;
   final String alat;
   final String durasi;
-  final StatusTransaksi status;
+  final String status;
 
   const TransaksiModel({
     required this.namaPeminjam,
@@ -20,60 +14,16 @@ class TransaksiModel {
   });
 
   Color get statusColor {
-    switch (status) {
-      case StatusTransaksi.dipinjam:
-        return Colors.blue;
-      case StatusTransaksi.selesai:
-        return Colors.green;
-      case StatusTransaksi.terlambat:
-        return Colors.red;
-    }
-  }
-
-  String get statusLabel {
-    switch (status) {
-      case StatusTransaksi.dipinjam:
-        return 'Dipinjam';
-      case StatusTransaksi.selesai:
-        return 'Selesai';
-      case StatusTransaksi.terlambat:
-        return 'Terlambat';
-    }
+  switch (status.toLowerCase()) {
+    case 'dipinjam': return Colors.blue;
+    case 'selesai': return Colors.green;
+    case 'menunggu': return Colors.grey;
+    case 'ditolak': return Colors.red;
+    case 'dikembalikan': return Colors.orange; // Tambahkan ini
+    default: return Colors.orange;
   }
 }
 
-/// =======================
-/// DUMMY PEMINJAMAN AKTIF
-/// =======================
-final List<TransaksiModel> dummyPeminjamanAktif = [
-  TransaksiModel(
-    namaPeminjam: 'Budi Santoso',
-    alat: 'Macbook Pro, Arduino',
-    durasi: 'Jam 1 - 5',
-    status: StatusTransaksi.dipinjam,
-  ),
-  TransaksiModel(
-    namaPeminjam: 'Siti Aminah',
-    alat: 'Macbook Pro',
-    durasi: 'Jam 1 - 5',
-    status: StatusTransaksi.terlambat,
-  ),
-];
-
-/// =======================
-/// DUMMY PENGEMBALIAN
-/// =======================
-final List<TransaksiModel> dummyPengembalianTerbaru = [
-  TransaksiModel(
-    namaPeminjam: 'Budi Santoso',
-    alat: 'Macbook Pro, Arduino',
-    durasi: 'Jam 1 - 5',
-    status: StatusTransaksi.selesai,
-  ),
-  TransaksiModel(
-    namaPeminjam: 'Siti Aminah',
-    alat: 'Macbook Pro',
-    durasi: 'Jam 1 - 5',
-    status: StatusTransaksi.terlambat,
-  ),
-];
+  // Helper untuk mengubah string status database ke label UI
+  String get statusLabel => status[0].toUpperCase() + status.substring(1);
+}

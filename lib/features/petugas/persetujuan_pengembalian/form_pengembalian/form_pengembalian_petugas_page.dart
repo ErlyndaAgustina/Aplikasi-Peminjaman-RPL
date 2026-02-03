@@ -31,7 +31,7 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
   int dendaTerlambat = 0;
   int terlambatMenit = 0;
   int dendaKerusakanValue = 0;
-  int tarifDendaPerMenit = 500;
+  int tarifDendaPerJam = 2000;
 
   @override
   void initState() {
@@ -66,17 +66,28 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
 
   try {
     DateTime deadline = DateTime.parse(dataModel!.batasKembaliRaw);
-    String datePart = tanggalCtrl.text.split('/').reversed.join('-');
+    
+    // Perbaikan parsing tanggal agar format dd/mm/yyyy aman
+    List<String> dateParts = tanggalCtrl.text.split('/');
+    String formattedDate = "${dateParts[2]}-${dateParts[1]}-${dateParts[0]}";
     String timePart = jamCtrl.text;
     
-    // Jadikan objek DateTime
-    DateTime waktuKembaliUser = DateTime.parse("$datePart $timePart:00");
+    DateTime waktuKembaliUser = DateTime.parse("$formattedDate $timePart:00");
 
     if (waktuKembaliUser.isAfter(deadline)) {
       Duration selisih = waktuKembaliUser.difference(deadline);
+      
       setState(() {
         terlambatMenit = selisih.inMinutes;
-        dendaTerlambat = terlambatMenit * tarifDendaPerMenit;
+        
+        // Logika Per Jam: 
+        // Kita ambil total jam, jika ada sisa menit kita bulatkan ke atas (+1 jam)
+        int totalJam = selisih.inHours;
+        if (selisih.inMinutes % 60 > 0) {
+          totalJam += 1; 
+        }
+        
+        dendaTerlambat = totalJam * tarifDendaPerJam;
       });
     } else {
       setState(() {
@@ -100,16 +111,17 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
           .single();
 
       setState(() {
-        // Masukkan hasil query ke model
-        dataModel = PengembalianModel.fromSupabase(res);
-        isLoading = false;
+  dataModel = PengembalianModel.fromSupabase(res);
+  isLoading = false;
 
-        // Set default input
-        tanggalCtrl.text =
-            "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
-        jamCtrl.text =
-            "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}";
-      });
+  final now = DateTime.now();
+  String d = now.day.toString().padLeft(2, '0');
+  String m = now.month.toString().padLeft(2, '0');
+  String y = now.year.toString();
+  
+  tanggalCtrl.text = "$d/$m/$y";
+  jamCtrl.text = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+});
       _hitungOtomatis();
     } catch (e) {
       debugPrint("Error load: $e");

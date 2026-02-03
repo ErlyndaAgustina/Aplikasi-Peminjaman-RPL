@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../profile/profile_page.dart';
 import 'models/model.dart';
 import 'widgets/peminjam_info_card.dart';
@@ -8,14 +9,60 @@ import 'widgets/DisplayDataBox.dart';
 
 const String roboto = 'Roboto';
 
-class DetailPengembalianPage extends StatelessWidget {
-  // Kita terima data dari halaman sebelumnya
-  final PengembalianModel data = dummyDetailPengembalian;
+class DetailPengembalianPage extends StatefulWidget {
+final String idPeminjaman;
+  const DetailPengembalianPage({super.key, required this.idPeminjaman});
 
-  DetailPengembalianPage({super.key, required String idPeminjaman});
+  @override
+  State<DetailPengembalianPage> createState() => _DetailPengembalianPageState();
+}
+
+class _DetailPengembalianPageState extends State<DetailPengembalianPage> {
+  bool isLoading = true;
+  DetailPengembalianModel? data;
+  @override
+  void initState() {
+    super.initState();
+    _loadDetailData();
+  }
+
+  Future<void> _loadDetailData() async {
+    try {
+      final res = await Supabase.instance.client
+          .from('peminjaman')
+          .select('''
+            *,
+            users(nama),
+            pengembalian(*),
+            detail_peminjaman(
+              alat_unit(
+                alat(nama_alat),
+                kode_unit
+              )
+            )
+          ''')
+          .eq('id_peminjaman', widget.idPeminjaman)
+          .single();
+
+      setState(() {
+        data = DetailPengembalianModel.fromDetailSupabase(res);
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error load detail: $e");
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Color(0xFF3E9F7F))));
+    }
+
+    if (data == null) {
+      return const Scaffold(body: Center(child: Text("Data tidak ditemukan")));
+    }
     return Scaffold(
       backgroundColor: const Color.fromRGBO(234, 247, 242, 1),
       appBar: _buildAppBar(context),
@@ -24,7 +71,7 @@ class DetailPengembalianPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PeminjamInfoCard(data: data),
+            PeminjamInfoCard(data: data!),
             const SizedBox(height: 20),
 
             const Text(
@@ -42,7 +89,7 @@ class DetailPengembalianPage extends StatelessWidget {
                 Expanded(
                   child: DisplayDataBox(
                     label: 'Tanggal Kembali',
-                    value: data.tanggalKembali,
+                    value: data!.tanggalKembali,
                     icon: Icons.calendar_today_outlined,
                   ),
                 ),
@@ -50,7 +97,7 @@ class DetailPengembalianPage extends StatelessWidget {
                 Expanded(
                   child: DisplayDataBox(
                     label: 'Jam Kembali',
-                    value: data.jamKembali,
+                    value: data!.jamKembali,
                     icon: Icons.access_time,
                   ),
                 ),
@@ -60,13 +107,13 @@ class DetailPengembalianPage extends StatelessWidget {
 
             DisplayDataBox(
               label: 'Denda Kerusakan (Rp)',
-              value: 'Rp ${data.dendaKerusakan.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+              value: 'Rp ${data!.dendaKerusakan.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => "${m[1]}.")}',
             ),
             const SizedBox(height: 12),
 
             DisplayDataBox(
               label: 'Catatan Kerusakan',
-              value: data.catatan,
+              value: data!.catatan,
             ),
             const SizedBox(height: 16),
 
@@ -74,10 +121,10 @@ class DetailPengembalianPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: AutoCalculateBox(
-                terlambatMenit: 1200, 
-                dendaTerlambat: data.dendaTerlambat,
-                dendaKerusakan: data.dendaKerusakan,
-              ),
+              terlambatMenit: data!.terlambatMenit,
+              dendaTerlambat: data!.dendaTerlambat,
+              dendaKerusakan: data!.dendaKerusakan,
+            ),
             ),
 
             const Text(
@@ -90,12 +137,10 @@ class DetailPengembalianPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            ...data.units.map(
-              (u) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: UnitDipinjamCard(unit: u),
-              ),
-            ),
+            ...data!.units.map((u) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: UnitDipinjamCard(unit: u),
+            )),
             
             const SizedBox(height: 24),
             // Tompol "Kembali" sebagai pengganti "Simpan"

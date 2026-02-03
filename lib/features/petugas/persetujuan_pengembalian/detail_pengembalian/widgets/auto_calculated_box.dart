@@ -23,8 +23,9 @@ class AutoCalculateBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Menghitung total secara internal
     final int totalDenda = dendaTerlambat + dendaKerusakan;
+    final bool isTerlambat = dendaTerlambat > 0;
+    final bool isRusak = dendaKerusakan > 0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -34,7 +35,9 @@ class AutoCalculateBox extends StatelessWidget {
         border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1), width: 1),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // --- HEADER (Selalu Muncul) ---
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -57,40 +60,73 @@ class AutoCalculateBox extends StatelessWidget {
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(255, 119, 119, 0.22),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Terlambat',
-                  style: TextStyle(
-                    fontFamily: roboto,
-                    color: Color.fromRGBO(255, 2, 2, 1),
-                    fontWeight: FontWeight.w800,
-                    fontSize: 11,
+              // Status Terlambat di pojok kanan (Hanya jika denda > 0)
+              if (isTerlambat)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(255, 119, 119, 0.22),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Terlambat',
+                    style: TextStyle(
+                      fontFamily: roboto,
+                      color: Color.fromRGBO(255, 2, 2, 1),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Grid: Terlambat (menit) & Denda Terlambat
-          Row(
-            children: [
-              _buildInfoColumn('Terlambat (menit)', 
-                '${terlambatMenit.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} min'),
-              _buildInfoColumn('Denda Terlambat', formatRupiah(dendaTerlambat)),
             ],
           ),
           
+          const SizedBox(height: 20),
+
+          // --- RINCIAN DENDA TERLAMBAT ---
+          if (isTerlambat) ...[
+            Row(
+              children: [
+                _buildInfoColumn('Terlambat (menit)', 
+                  '${terlambatMenit.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')} min'),
+                _buildInfoColumn('Denda Terlambat', formatRupiah(dendaTerlambat)),
+              ],
+            ),
+          ],
+
+          // Beri jarak antar rincian jika ada dua jenis denda
+          if (isTerlambat && isRusak) const SizedBox(height: 12),
+          if (isRusak) ...[
+            Row(
+              children: [
+                const Text(
+                  'Denda Kerusakan',
+                  style: TextStyle(
+                    fontFamily: roboto,
+                    color: Color.fromRGBO(72, 141, 117, 1),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(), // Ini yang bikin harga geser ke kanan mentok
+                Text(
+                  formatRupiah(dendaKerusakan),
+                  style: const TextStyle(
+                    fontFamily: roboto,
+                    color: Color.fromRGBO(255, 2, 2, 1),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          
+          // --- FOOTER TOTAL ---
           const SizedBox(height: 8),
           const Divider(color: Color.fromRGBO(205, 238, 226, 1), thickness: 1.2),
           const SizedBox(height: 8),
 
-          // Total Denda Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -126,7 +162,7 @@ class AutoCalculateBox extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: roboto,
               color: Color.fromRGBO(72, 141, 117, 1),
               fontSize: 13,

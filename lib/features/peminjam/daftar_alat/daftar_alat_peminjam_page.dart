@@ -21,7 +21,7 @@ class DaftarAlatPeminjamPage extends StatefulWidget {
 class _DaftarAlatPeminjamPageState extends State<DaftarAlatPeminjamPage> {
   final SupabaseClient supabase = Supabase.instance.client;
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<AlatModel> _allAlatFromDb = []; // Data asli dari DB
   List<AlatModel> _filteredAlatList = []; // Data untuk tampilan
   bool _isLoading = true;
@@ -38,7 +38,7 @@ class _DaftarAlatPeminjamPageState extends State<DaftarAlatPeminjamPage> {
   Future<void> _fetchAlatData() async {
     try {
       setState(() => _isLoading = true);
-      
+
       // Query dengan join ke kategori dan filter unit yang 'tersedia' saja
       final response = await supabase
           .from('alat')
@@ -50,9 +50,11 @@ class _DaftarAlatPeminjamPageState extends State<DaftarAlatPeminjamPage> {
           .eq('alat_unit.status', 'tersedia'); // Hanya ambil unit yang tersedia
 
       final List data = response as List;
-      
+
       setState(() {
-        _allAlatFromDb = data.map((item) => AlatModel.fromSupabase(item)).toList();
+        _allAlatFromDb = data
+            .map((item) => AlatModel.fromSupabase(item))
+            .toList();
         // Hanya tampilkan alat yang jumlah unit tersedianya > 0
         _allAlatFromDb = _allAlatFromDb.where((a) => a.jumlah > 0).toList();
         _filteredAlatList = _allAlatFromDb;
@@ -68,10 +70,12 @@ class _DaftarAlatPeminjamPageState extends State<DaftarAlatPeminjamPage> {
     String query = _searchController.text.toLowerCase();
     setState(() {
       _filteredAlatList = _allAlatFromDb.where((alat) {
-        bool matchesSearch = alat.nama.toLowerCase().contains(query) ||
-                             alat.kode.toLowerCase().contains(query);
-        bool matchesKategori = _selectedKategori == 'Semua Status' ||
-                               alat.kategori == _selectedKategori;
+        bool matchesSearch =
+            alat.nama.toLowerCase().contains(query) ||
+            alat.kode.toLowerCase().contains(query);
+        bool matchesKategori =
+            _selectedKategori == 'Semua Status' ||
+            alat.kategori == _selectedKategori;
         return matchesSearch && matchesKategori;
       }).toList();
     });
@@ -236,12 +240,16 @@ class _DaftarAlatPeminjamPageState extends State<DaftarAlatPeminjamPage> {
           ),
 
           Expanded(
-            child: _isLoading 
-                ? const Center(child: CircularProgressIndicator()) // Loading State
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  ) // Loading State
                 : RefreshIndicator(
                     onRefresh: _fetchAlatData, // Bisa ditarik untuk refresh
                     child: _filteredAlatList.isEmpty
-                        ? const Center(child: Text("Alat tersedia tidak ditemukan"))
+                        ? const Center(
+                            child: Text("Alat tersedia tidak ditemukan"),
+                          )
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                             itemCount: _filteredAlatList.length,
@@ -258,7 +266,6 @@ class _DaftarAlatPeminjamPageState extends State<DaftarAlatPeminjamPage> {
       ),
 
       floatingActionButton: FloatingActionButton(
-        // ... Logika FAB tetap sama ...
         onPressed: () {
           if (keranjangAlat.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -270,7 +277,11 @@ class _DaftarAlatPeminjamPageState extends State<DaftarAlatPeminjamPage> {
               MaterialPageRoute(
                 builder: (context) => const AjukanPeminjamanPage(),
               ),
-            ).then((_) => setState(() {}));
+            ).then((refresh) {
+              if (refresh == true) {
+                _fetchAlatData();
+              }
+            });
           }
         },
         backgroundColor: const Color.fromRGBO(62, 159, 127, 1),

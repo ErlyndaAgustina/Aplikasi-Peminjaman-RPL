@@ -30,7 +30,6 @@ class InputTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const String roboto = 'Roboto';
-    // Logika pemilihan icon
     Widget? buildSuffixIcon() {
       if (isDatePicker) {
         return const Icon(

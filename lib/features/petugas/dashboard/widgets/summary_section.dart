@@ -1,78 +1,73 @@
 import 'package:flutter/material.dart';
 import 'summary_card.dart';
 
-const String roboto = 'Roboto';
-
 class SummarySection extends StatelessWidget {
-  const SummarySection({super.key});
+  final Map<String, int> counts;
+  final String userName;
+
+  const SummarySection({
+    super.key, 
+    required this.counts, 
+    this.userName = 'Petugas'
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-            const Text(
-          'Halo, Erlynda',
-          style: TextStyle(
-            fontFamily: roboto,
-            color: Color.fromRGBO(49, 47, 52, 1),
+        Text(
+          'Halo, $userName',
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
+            color: Color.fromRGBO(49, 47, 52, 1),
           ),
         ),
-        const SizedBox(height: 2),
         const Text(
-          'Berikut adalah ringkasan RPLKIT bulan ini.',
-          style: TextStyle(
-            fontFamily: roboto,
-            fontSize: 13,
-            color: Color.fromRGBO(72, 141, 117, 1),
-          ),
+          'Berikut adalah ringkasan RPLKIT hari ini.',
+          style: TextStyle(fontSize: 13, color: Color.fromRGBO(72, 141, 117, 1)),
         ),
         const SizedBox(height: 16),
-
-        /// BARIS 1
         Row(
-          children: const [
+          children: [
             Expanded(
               child: SummaryCard(
                 title: 'Peminjaman Aktif',
-                value: '23',
+                value: counts['aktif'].toString(),
                 icon: Icons.assignment,
-                color: Color.fromRGBO(28, 106, 255, 1),
+                color: const Color.fromRGBO(28, 106, 255, 1),
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: SummaryCard(
-                title: 'Total Alat',
-                value: '156',
+                title: 'Total Unit Alat',
+                value: counts['total_alat'].toString(),
                 icon: Icons.inventory_2,
-                color: Color.fromRGBO(0, 169, 112, 1),
+                color: const Color.fromRGBO(0, 169, 112, 1),
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-
-        /// BARIS 2
         Row(
-          children: const [
+          children: [
             Expanded(
               child: SummaryCard(
                 title: 'Pengembalian',
-                value: '8',
+                value: counts['dikembalikan'].toString(),
                 icon: Icons.autorenew,
-                color: Color.fromRGBO(239, 133, 0, 1),
+                color: const Color.fromRGBO(239, 133, 0, 1),
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: SummaryCard(
-                title: 'Terlambat',
-                value: '2',
-                icon: Icons.block,
-                color: Color.fromRGBO(255, 2, 2, 1),
+                title: 'Selesai',
+                value: counts['selesai'].toString(),
+                icon: Icons.done_all,
+                color: const Color.fromRGBO(255, 2, 2, 1),
               ),
             ),
           ],
