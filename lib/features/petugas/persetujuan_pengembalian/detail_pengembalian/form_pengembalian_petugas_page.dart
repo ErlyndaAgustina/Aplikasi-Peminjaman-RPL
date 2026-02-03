@@ -12,7 +12,7 @@ class DetailPengembalianPage extends StatelessWidget {
   // Kita terima data dari halaman sebelumnya
   final PengembalianModel data = dummyDetailPengembalian;
 
-  DetailPengembalianPage({super.key});
+  DetailPengembalianPage({super.key, required String idPeminjaman});
 
   @override
   Widget build(BuildContext context) {

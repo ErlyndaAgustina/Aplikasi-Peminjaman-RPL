@@ -11,7 +11,8 @@ import 'widgets/simpan_button.dart';
 const String roboto = 'Roboto';
 
 class FormPengembalianPage extends StatefulWidget {
-  const FormPengembalianPage({super.key});
+  final String idPeminjaman;
+  const FormPengembalianPage({super.key, required this.idPeminjaman});
 
   @override
   State<FormPengembalianPage> createState() => _FormPengembalianPageState();
@@ -266,9 +267,9 @@ class _FormPengembalianPageState extends State<FormPengembalianPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
                 child: AutoCalculateBox(
-                  terlambatMenit: 1200, // Data dummy atau dari logic sistem
-                  dendaTerlambat: 50000, // Data dummy atau dari logic sistem
-                  dendaKerusakan: dendaKerusakanValue, // Data dari input user
+                  terlambatMenit: 1200,
+                  dendaTerlambat: 50000,
+                  dendaKerusakan: dendaKerusakanValue,
                 ),
               ),
 

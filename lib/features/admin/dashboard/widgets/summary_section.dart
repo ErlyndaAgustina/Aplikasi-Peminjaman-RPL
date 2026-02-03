@@ -1,8 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'summary_card.dart';
 
-class SummarySection extends StatelessWidget {
+const String roboto = 'Roboto';
+
+class SummarySection extends StatefulWidget {
   const SummarySection({super.key});
+
+  @override
+  State<SummarySection> createState() => _SummarySectionState();
+}
+
+class _SummarySectionState extends State<SummarySection> {
+  final supabase = Supabase.instance.client;
+  
+  int totalPengguna = 0;
+  int totalAlat = 0;
+  int peminjamanAktif = 0;
+  int pengembalianHariIni = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSummaryData();
+  }
+
+  Future<void> fetchSummaryData() async {
+    try {
+      // Mengambil data secara paralel agar lebih cepat
+      final results = await Future.wait([
+        supabase.from('users').count(),
+        supabase.from('alat_unit').count(),
+        supabase.from('peminjaman').count().eq('status', 'dipinjam'), // Sesuaikan statusnya
+        supabase.from('pengembalian')
+            .count()
+            .gte('tanggal_kembali', DateTime.now().toIso8601String().substring(0, 10)), 
+      ]);
+
+      if (mounted) {
+        setState(() {
+          totalPengguna = results[0];
+          totalAlat = results[1];
+          peminjamanAktif = results[2];
+          pengembalianHariIni = results[3];
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error Fetch Summary: $e");
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +59,7 @@ class SummarySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Halo, Erlynda',
+          'Halo, Admin', // Nanti bisa ambil dari session user
           style: TextStyle(
             fontFamily: roboto,
             color: Color.fromRGBO(49, 47, 52, 1),
@@ -20,7 +69,7 @@ class SummarySection extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         const Text(
-          'Berikut adalah ringkasan RPLKIT bulan ini.',
+          'Berikut adalah ringkasan RPLKIT saat ini.',
           style: TextStyle(
             fontFamily: roboto,
             fontSize: 13,
@@ -28,34 +77,38 @@ class SummarySection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Column(
-          children: const [
-            SummaryCard(
-              title: 'Total Pengguna',
-              value: '48',
-              icon: Icons.people,
-              color: Color.fromRGBO(99, 36, 235, 1), // hijau
-            ),
-            SummaryCard(
-              title: 'Total Alat',
-              value: '156',
-              icon: Icons.inventory_2,
-              color: Color.fromRGBO(0, 169, 112, 1), // biru
-            ),
-            SummaryCard(
-              title: 'Peminjaman Aktif',
-              value: '23',
-              icon: Icons.assignment,
-              color: Color.fromRGBO(28, 106, 255, 1), // kuning
-            ),
-            SummaryCard(
-              title: 'Pengembalian Hari Ini',
-              value: '8',
-              icon: Icons.assignment_return,
-              color: Color.fromRGBO(239, 133, 0, 1), // merah
-            ),
-          ],
-        ),
+        
+        if (isLoading)
+          const Center(child: LinearProgressIndicator())
+        else
+          Column(
+            children: [
+              SummaryCard(
+                title: 'Total Pengguna',
+                value: totalPengguna.toString(),
+                icon: Icons.people,
+                color: const Color.fromRGBO(99, 36, 235, 1),
+              ),
+              SummaryCard(
+                title: 'Total Unit Alat',
+                value: totalAlat.toString(),
+                icon: Icons.inventory_2,
+                color: const Color.fromRGBO(0, 169, 112, 1),
+              ),
+              SummaryCard(
+                title: 'Peminjaman Aktif',
+                value: peminjamanAktif.toString(),
+                icon: Icons.assignment,
+                color: const Color.fromRGBO(28, 106, 255, 1),
+              ),
+              SummaryCard(
+                title: 'Pengembalian Hari Ini',
+                value: pengembalianHariIni.toString(),
+                icon: Icons.assignment_return,
+                color: const Color.fromRGBO(239, 133, 0, 1),
+              ),
+            ],
+          ),
       ],
     );
   }

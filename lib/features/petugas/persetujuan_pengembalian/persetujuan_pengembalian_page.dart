@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../profile/profile_page.dart';
 import '../sidebar/sidebar_petugas.dart';
 import 'models/model.dart';
@@ -17,13 +18,38 @@ class PersetujuanPengembalianPage extends StatefulWidget {
 class _PersetujuanPengembalianPageState
     extends State<PersetujuanPengembalianPage>
     with SingleTickerProviderStateMixin {
+      final supabase = Supabase.instance.client;
   late final TabController _tabController;
+
+  Future<List<PengembalianModel>> fetchDataPetugas(String statusFilter) async {
+  try {
+    final response = await supabase
+        .from('peminjaman')
+        .select('''
+          *,
+          users ( nama ), 
+          detail_peminjaman (
+            alat_unit (
+              alat ( nama_alat )
+            )
+          )
+        ''')
+        .eq('status', statusFilter)
+        .order('created_at', ascending: false);
+
+    final data = response as List;
+    return data.map((item) => PengembalianModel.fromMap(item)).toList();
+  } catch (e) {
+    print('Error Supabase: $e');
+    return [];
+  }
+}
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 2, // ✅ HARUS sama
+      length: 2,
       vsync: this,
       animationDuration: const Duration(milliseconds: 450),
     );
@@ -34,28 +60,6 @@ class _PersetujuanPengembalianPageState
     _tabController.dispose();
     super.dispose();
   }
-
-  List<PengembalianModel> getData(StatusPengembalian status) {
-    return [
-      PengembalianModel(
-        nama: 'Siti Aminah',
-        kode: 'PJM-20260114-g6ht',
-        tanggal: '2 Januari 2026',
-        jam: 'Jam ke 2',
-        alat: ['Macbook Pro', 'Arduino'],
-        status: status,
-      ),
-      PengembalianModel(
-        nama: 'Dewangga Putra',
-        kode: 'PJM-20260114-g6hf',
-        tanggal: '3 Januari 2026',
-        jam: 'Jam ke 2 - 4',
-        alat: ['Arduino'],
-        status: status,
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,7 +67,6 @@ class _PersetujuanPengembalianPageState
       drawer: const SidebarPetugasDrawer(),
       body: Column(
         children: [
-          /// ================= HEADER + TAB =================
           Container(
             color: Colors.white,
             child: SafeArea(
@@ -119,24 +122,30 @@ class _PersetujuanPengembalianPageState
                           ),
                         ),
                         GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfilePenggunaPage(),
-                      ),
-                    );
-                  },
-                  child: const CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Color.fromRGBO(217, 253, 240, 0.49),
-                    child: Icon(
-                      Icons.person,
-                      color: Color.fromRGBO(62, 159, 127, 1),
-                      size: 20,
-                    ),
-                  ),
-                ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ProfilePenggunaPage(),
+                              ),
+                            );
+                          },
+                          child: const CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Color.fromRGBO(
+                              217,
+                              253,
+                              240,
+                              0.49,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: Color.fromRGBO(62, 159, 127, 1),
+                              size: 20,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -186,12 +195,30 @@ class _PersetujuanPengembalianPageState
           /// ================= ISI TAB =================
           Expanded(
             child: TabBarView(
-              controller: _tabController,
-              children: [
-                _TabContent(data: getData(StatusPengembalian.dipinjam)),
-                _TabContent(data: getData(StatusPengembalian.selesai)),
-              ],
-            ),
+  controller: _tabController,
+  children: [
+    // Tab 1: Status 'dikembalikan' (yang barusan diajukan peminjam)
+    FutureBuilder<List<PengembalianModel>>(
+      future: fetchDataPetugas('dikembalikan'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return _TabContent(data: snapshot.data ?? []);
+      },
+    ),
+    // Tab 2: Status 'selesai'
+    FutureBuilder<List<PengembalianModel>>(
+      future: fetchDataPetugas('selesai'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return _TabContent(data: snapshot.data ?? []);
+      },
+    ),
+  ],
+),
           ),
         ],
       ),

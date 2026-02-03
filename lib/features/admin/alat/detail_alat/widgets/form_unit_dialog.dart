@@ -21,7 +21,6 @@ class FormUnitDialog extends StatefulWidget {
 }
 
 class _FormUnitDialogState extends State<FormUnitDialog> {
-  final _formKey = GlobalKey<FormState>();
   final _kodeController = TextEditingController();
   final _kondisiController = TextEditingController();
   String _selectedStatus = 'tersedia';

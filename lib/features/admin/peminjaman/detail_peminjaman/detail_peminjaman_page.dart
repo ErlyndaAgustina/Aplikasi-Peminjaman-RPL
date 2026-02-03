@@ -175,17 +175,15 @@ class _DetailPeminjamanPageState extends State<DetailPeminjamanPage> {
                         ),
                       ),
                       onPressed: () async {
-                        // Tambahkan 'async' dan simpan hasil kembalian dialog ke variabel 'refresh'
                         final bool? refresh = await showDialog<bool>(
                           context: context,
                           barrierColor: Colors.black54,
                           builder: (context) => TambahUnitModal(
                             idPeminjaman:
-                                widget.peminjamanId, // KIRIM ID DI SINI
+                                widget.peminjamanId,
                           ),
                         );
 
-                        // Jika dialog ditutup dengan sukses (mengirim nilai true), jalankan refresh
                         if (refresh == true) {
                           fetchDetailPeminjaman();
                         }
@@ -224,9 +222,8 @@ class _DetailPeminjamanPageState extends State<DetailPeminjamanPage> {
                             color: const Color.fromRGBO(62, 159, 127, 1),
                             borderRadius: BorderRadius.circular(15),
                           ),
-                          // PERBAIKAN DI SINI:
                           child: Text(
-                            '${listUnit.length} Unit', // Mengambil jumlah asli dari listUnit
+                            '${listUnit.length} Unit',
                             style: const TextStyle(
                               fontFamily: roboto,
                               fontSize: 12,
@@ -243,7 +240,12 @@ class _DetailPeminjamanPageState extends State<DetailPeminjamanPage> {
                       child: ListView.builder(
                         itemCount: listUnit.length,
                         itemBuilder: (context, index) {
-                          return UnitDipinjamCard(unit: listUnit[index]);
+                          return UnitDipinjamCard(
+                            unit: listUnit[index],
+                            onDelete: () {
+                              fetchDetailPeminjaman();
+                            },
+                          );
                         },
                       ),
                     ),

@@ -22,7 +22,6 @@ class DetailPeminjamanModel {
   factory DetailPeminjamanModel.fromJson(Map<String, dynamic> json) {
   final listDetail = json['detail_peminjaman'] as List? ?? [];
   
-  // Format Batas Kembali secara manual agar sama dengan PeminjamanModel
   String batasFormatted = "-";
   if (json['batas_kembali'] != null) {
     DateTime dtBatas = DateTime.parse(json['batas_kembali']);
@@ -39,7 +38,7 @@ class DetailPeminjamanModel {
     jam: "Jam ${json['jam_mulai']} - ${json['jam_selesai']}",
     totalUnit: listDetail.length,
     status: json['status'],
-    catatan: batasFormatted, // Sekarang berisi string yang sudah diformat rapi
+    catatan: batasFormatted,
   );
 }
 }

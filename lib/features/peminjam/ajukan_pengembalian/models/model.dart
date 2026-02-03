@@ -46,7 +46,7 @@ class TransaksiModel {
     batasKembali: map['batas_kembali'] != null 
         ? DateTime.parse(map['batas_kembali']) 
         : DateTime.now(),
-    jam: "Jam ke ${map['jam_mulai'] ?? '?'}",
+    jam: "Jam ke ${map['jam_mulai']?.toString() ?? '?'}",
     status: map['status'] ?? 'dipinjam',
   );
 }

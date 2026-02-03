@@ -24,17 +24,31 @@ class _AjukanPengembalianPageState extends State<AjukanPengembalianPage> {
     fetchPeminjaman();
   }
   Future<void> fetchPeminjaman() async {
-    try {
-      final userId = supabase.auth.currentUser!.id;
-      final response = await supabase
-          .from('peminjaman')
-          .select('''
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    // 1. Ambil ID Internal (id_user) dari tabel users dulu, persis seperti di page peminjaman
+    final userData = await supabase
+        .from('users')
+        .select('id_user')
+        .eq('auth_user_id', user.id) // Asumsi kolom di tabel users adalah auth_user_id
+        .single();
+
+    final String idUserInternal = userData['id_user'];
+    print("Mencari data untuk ID User Internal: $idUserInternal");
+
+    // 2. Gunakan idUserInternal untuk filter tabel peminjaman
+    final response = await supabase
+        .from('peminjaman')
+        .select('''
           id_peminjaman,
           kode_peminjaman,
           tanggal_pinjam,
           batas_kembali,
           status,
           jam_mulai,
+          created_at,
           detail_peminjaman (
             alat_unit (
               kode_unit,
@@ -44,41 +58,62 @@ class _AjukanPengembalianPageState extends State<AjukanPengembalianPage> {
             )
           )
         ''')
-          .eq('id_user', userId)
-          .or('status.eq.dipinjam,status.eq.terlambat')
-          .order('created_at', ascending: false);
+        .eq('id_user', idUserInternal)
+        .inFilter('status', ['dipinjam', 'terlambat']) 
+        .order('created_at', ascending: false);
+
+    if (mounted) {
       setState(() {
         daftarPeminjaman = (response as List)
             .map((data) => TransaksiModel.fromMap(data))
             .toList();
         isLoading = false;
       });
-
-      print("Data berhasil diambil: ${daftarPeminjaman.length} item");
-    } catch (e) {
-      debugPrint('Error fetch detail: $e');
-      setState(() => isLoading = false);
     }
+  } catch (e) {
+    debugPrint('Error fetch detail: $e');
+    if (mounted) setState(() => isLoading = false);
   }
+}
   Future<void> ajukanPengembalian(String idPeminjaman) async {
-    try {
-      await supabase
-          .from('peminjaman')
-          .update({
-            'status': 'menunggu',
-          })
-          .eq('id_peminjaman', idPeminjaman);
+  try {
+    final detailResponse = await supabase
+        .from('detail_peminjaman')
+        .select('id_unit')
+        .eq('id_peminjaman', idPeminjaman);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permintaan pengembalian dikirim!')),
-        );
-        fetchPeminjaman();
-      }
-    } catch (e) {
-      debugPrint('Error update: $e');
+    final List unitIds = (detailResponse as List).map((d) => d['id_unit']).toList();
+
+    await supabase
+        .from('peminjaman')
+        .update({'status': 'dikembalikan'})
+        .eq('id_peminjaman', idPeminjaman);
+
+    if (unitIds.isNotEmpty) {
+      await supabase
+          .from('alat_unit')
+          .update({'status': 'tersedia'})
+          .inFilter('id_unit', unitIds);
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Permintaan pengembalian dikirim & unit tersedia kembali!'),
+          backgroundColor: Color.fromRGBO(62, 159, 127, 1),
+        ),
+      );
+      fetchPeminjaman();
+    }
+  } catch (e) {
+    debugPrint('Error proses pengembalian: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengajukan: $e'), backgroundColor: Colors.red),
+      );
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {

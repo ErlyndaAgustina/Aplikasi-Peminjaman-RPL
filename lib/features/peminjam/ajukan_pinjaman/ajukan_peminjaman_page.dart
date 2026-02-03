@@ -61,11 +61,7 @@ class _AjukanPeminjamanPageState extends State<AjukanPeminjamanPage> {
     }
   }
 
-  // Fungsi untuk menghitung jam asli berdasarkan urutan jam pelajaran
-  // Jam 1 = 07:00, Jam 2 = 07:40, dst.
   String _hitungEstimasiJam(int urutanJam) {
-    // Setiap jam pelajaran = 40 menit, dimulai jam 07:00
-    // Jika urutanJam adalah 7, maka 7 * 40 = 280 menit
     DateTime baseTime = DateTime(2026, 1, 1, 7, 0);
     DateTime hasil = baseTime.add(Duration(minutes: urutanJam * 40));
     return DateFormat('HH:mm').format(hasil);

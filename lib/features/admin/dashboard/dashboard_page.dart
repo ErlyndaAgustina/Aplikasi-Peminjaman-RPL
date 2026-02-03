@@ -99,16 +99,24 @@ class DashboardAdminPage extends StatelessWidget {
         ),
       ),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            SizedBox(height: 8),
-            SummarySection(),
-            SizedBox(height: 24),
-            QuickAccessSection(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardAdminPage()),
+          );
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              SizedBox(height: 8),
+              SummarySection(),
+              SizedBox(height: 24),
+              QuickAccessSection(),
+            ],
+          ),
         ),
       ),
     );

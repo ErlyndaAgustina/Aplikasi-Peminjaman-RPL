@@ -8,7 +8,7 @@ class PeminjamanModel {
   final String? catatan;
   final String batasKembali;
   final int durasiTerlambat;
-  final String idPeminjaman; // Ini yang kita panggil di navigasi
+  final String idPeminjaman;
 
   PeminjamanModel({
     required this.id,
@@ -50,7 +50,7 @@ class PeminjamanModel {
       DateTime today = DateTime.now();
       DateTime todayDate = DateTime(today.year, today.month, today.day);
 
-      // Ambil tanggal batas tanpa jam (00:00)
+      // Ambil tanggal batas
       DateTime batasDate = DateTime(dtBatas.year, dtBatas.month, dtBatas.day);
 
       // Hitung selisih harinya

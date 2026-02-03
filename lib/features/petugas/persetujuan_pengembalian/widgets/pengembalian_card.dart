@@ -159,18 +159,20 @@ class PengembalianCard extends StatelessWidget {
             height: 40,
             child: ElevatedButton(
               onPressed: () {
-                if (data.status == StatusPengembalian.dipinjam) {
+                if (data.status == StatusPengembalian.dikembalikan) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const FormPengembalianPage(),
+                      builder: (_) =>
+                          FormPengembalianPage(idPeminjaman: data.id),
                     ),
                   );
                 } else {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DetailPengembalianPage(),
+                      builder: (_) =>
+                          DetailPengembalianPage(idPeminjaman: data.id),
                     ),
                   );
                 }
@@ -183,7 +185,7 @@ class PengembalianCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                data.buttonText, // ← pakai getter model (lebih bersih)
+                data.buttonText,
                 style: const TextStyle(
                   fontFamily: roboto,
                   fontSize: 15,

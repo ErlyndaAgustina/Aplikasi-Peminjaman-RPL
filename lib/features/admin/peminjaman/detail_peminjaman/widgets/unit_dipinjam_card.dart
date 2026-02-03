@@ -6,8 +6,13 @@ const String roboto = 'Roboto';
 
 class UnitDipinjamCard extends StatelessWidget {
   final UnitDipinjamModel unit;
+  final VoidCallback onDelete;
 
-  const UnitDipinjamCard({super.key, required this.unit});
+  const UnitDipinjamCard({
+    super.key,
+    required this.unit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -103,13 +108,20 @@ class UnitDipinjamCard extends StatelessWidget {
                     Icons.delete,
                     const Color.fromRGBO(255, 119, 119, 0.22),
                     iconColor: const Color.fromRGBO(255, 2, 2, 1),
-                    onTap: () {
-                      showDialog(
+                    onTap: () async {
+                      // Tunggu hasil dari dialog
+                      final bool? direfresh = await showDialog<bool>(
                         context: context,
-                        builder: (context) => const HapusUnitDialog(
-                          title: "Detail Alat",
-                        ), // Sesuaikan title-nya
+                        builder: (context) => HapusUnitDialog(
+                          idDetail:
+                              unit.idDetail, // Pastikan modelmu punya idDetail
+                          namaUnit: unit.kodeUnit,
+                        ),
                       );
+
+                      if (direfresh == true) {
+                        onDelete(); // Panggil fungsi refresh di parent
+                      }
                     },
                   ),
                 ],
@@ -121,21 +133,24 @@ class UnitDipinjamCard extends StatelessWidget {
     );
   }
 
-  Widget _iconBtn(IconData icon, Color bgColor, {Color? iconColor, VoidCallback? onTap}) { // Tambahkan parameter onTap
-  return GestureDetector( // Bungkus dengan GestureDetector
-    onTap: onTap, // Pasang di sini
-    child: Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(10),
+  Widget _iconBtn(
+    IconData icon,
+    Color bgColor, {
+    Color? iconColor,
+    VoidCallback? onTap,
+  }) {
+    // Tambahkan parameter onTap
+    return GestureDetector(
+      // Bungkus dengan GestureDetector
+      onTap: onTap, // Pasang di sini
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: iconColor ?? Colors.black, size: 20),
       ),
-      child: Icon(
-        icon,
-        color: iconColor ?? Colors.black,
-        size: 20,
-      ),
-    ),
-  );
-}
+    );
+  }
 }
