@@ -151,14 +151,14 @@ class _ManajemenAlatPageState extends State<ManajemenAlatPage> {
                 ),
               ),
               onPressed: () {
-  showDialog(
-    context: context,
-    builder: (context) => FormAlatDialog(
-      isEdit: false, 
-      onRefresh: loadAlat, // Pastikan ini ada
-    ),
-  );
-},
+                showDialog(
+                  context: context,
+                  builder: (context) => FormAlatDialog(
+                    isEdit: false,
+                    onRefresh: loadAlat, // Pastikan ini ada
+                  ),
+                );
+              },
               icon: const Icon(Icons.add, color: Colors.white, size: 22),
               label: const Text(
                 'Tambah Alat',

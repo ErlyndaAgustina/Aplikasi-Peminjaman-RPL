@@ -159,10 +159,7 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              AlatHeaderCard(
-                alat: currentAlat,
-                count: unitAlatList.length,
-              ),
+              AlatHeaderCard(alat: currentAlat, count: unitAlatList.length),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -232,9 +229,18 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                 onChanged: (value) => setState(() => searchQuery = value),
                 decoration: InputDecoration(
                   hintText: 'Cari kode unit atau kondisi...',
+                  hintStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
                   prefixIcon: const Icon(
                     Icons.search,
+                    size: 20, // Perkecil ukuran icon sedikit
                     color: Color.fromRGBO(72, 141, 117, 1),
+                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 10,
                   ),
                   filled: true,
                   fillColor: Colors.white,
@@ -246,6 +252,13 @@ class _DetailAlatPageState extends State<DetailAlatPage> {
                     borderRadius: BorderRadius.circular(14),
                     borderSide: const BorderSide(
                       color: Color.fromRGBO(205, 238, 226, 1),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: Color.fromRGBO(72, 141, 117, 1),
+                      width: 1.5,
                     ),
                   ),
                 ),

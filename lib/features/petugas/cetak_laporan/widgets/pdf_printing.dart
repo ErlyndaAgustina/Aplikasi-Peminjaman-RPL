@@ -40,19 +40,25 @@ class PdfService {
               pw.SizedBox(height: 12),
 
               /// TABEL DATA
+              /// TABEL DATA
               pw.TableHelper.fromTextArray(
                 headers: tableData.first,
                 data: tableData.sublist(1),
-                border: pw.TableBorder.all(
-                  width: 0.5,
-                  color: PdfColors.grey,
-                ),
+                border: pw.TableBorder.all(width: 0.5, color: PdfColors.grey),
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(30), // No (lebar tetap kecil)
+                  1: const pw.FixedColumnWidth(80), // Tanggal
+                  2: const pw.FlexColumnWidth(
+                    3,
+                  ), // Nama Peminjam (ambil ruang paling banyak)
+                  3: const pw.FlexColumnWidth(2), // Alat
+                  4: const pw.FlexColumnWidth(2), // Kategori
+                  5: const pw.FixedColumnWidth(80), // Status
+                },
                 headerDecoration: const pw.BoxDecoration(
                   color: PdfColors.grey300,
                 ),
-                headerStyle: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold,
-                ),
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 cellStyle: const pw.TextStyle(fontSize: 10),
                 cellAlignment: pw.Alignment.centerLeft,
               ),

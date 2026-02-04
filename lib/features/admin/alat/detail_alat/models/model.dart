@@ -4,6 +4,7 @@ class UnitAlatModel {
   final String kodeUnit;
   final String kondisi;
   final String status;
+  final String? videoUrl;
 
   UnitAlatModel({
     required this.idUnit,
@@ -11,6 +12,7 @@ class UnitAlatModel {
     required this.kodeUnit,
     required this.kondisi,
     required this.status,
+    this.videoUrl,
   });
 
   factory UnitAlatModel.fromMap(Map<String, dynamic> map) {
@@ -20,6 +22,7 @@ class UnitAlatModel {
       kodeUnit: map['kode_unit'] ?? '',
       kondisi: map['kondisi'] ?? '',
       status: map['status'] ?? '',
+      videoUrl: map['video_url'],
     );
   }
 }

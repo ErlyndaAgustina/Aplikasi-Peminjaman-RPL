@@ -37,7 +37,7 @@ class PeminjamanModel {
   if (map['detail_peminjaman'] != null) {
     final details = map['detail_peminjaman'] as List;
     for (var item in details) {
-      final namaAlat = item['alat_unit']?['alat']?['nama_alat'];
+      final namaAlat = item['alat_unit']?['alat']?['nama_alat']; // a nya hilang
       if (namaAlat != null) {
         listAlat.add(namaAlat.toString());
       }
@@ -49,11 +49,11 @@ class PeminjamanModel {
     nama: namaUser,
     kode: map['kode_peminjaman'] ?? '-',
     tanggal: map['tanggal_pinjam'] != null 
-        ? DateTime.parse(map['tanggal_pinjam']) 
+        ? DateTime.parse(map['tanggal_pinjam'])  // n nya hilang
         : DateTime.now(),
     jamMulai: map['jam_mulai'] ?? 0,
     jamSelesai: map['jam_selesai'] ?? 0,
-    status: map['status'] ?? 'menunggu',
+    status: map['status'] ?? 'menunggu', // t nya hilang
     alat: listAlat,
   );
 }

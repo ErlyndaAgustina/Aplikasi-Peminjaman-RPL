@@ -1,6 +1,6 @@
-enum StatusTransaksi { dipinjam, terlambat }
+enum StatusTransaksi { dipinjam, ditolak, menunggu, dikembalikan, selesai }
 
-class TransaksiModel {
+class PeminjamTransaksiModel {
   final String kode;
   final String namaAlat;
   final String idAlat;
@@ -9,7 +9,7 @@ class TransaksiModel {
   final String batasKembali;
   final StatusTransaksi status;
 
-  const TransaksiModel({
+  const PeminjamTransaksiModel({
     required this.kode,
     required this.namaAlat,
     required this.idAlat,
@@ -19,24 +19,3 @@ class TransaksiModel {
     required this.status,
   });
 }
-
-final List<TransaksiModel> dummyPeminjaman = [
-  const TransaksiModel(
-    kode: 'PJM-20260114-g6ht',
-    namaAlat: 'Macbook Pro',
-    idAlat: 'LTP-001-U1',
-    tanggal: '2 Januari 2026',
-    jam: 'Jam ke 2',
-    batasKembali: '2 Januari 2026, 09.00',
-    status: StatusTransaksi.dipinjam,
-  ),
-  const TransaksiModel(
-    kode: 'PJM-20260114-g6ht',
-    namaAlat: 'Arduino',
-    idAlat: 'LTP-002-A1',
-    tanggal: '2 Januari 2026',
-    jam: 'Jam ke 2',
-    batasKembali: '1 Januari 2026, 09.00',
-    status: StatusTransaksi.terlambat,
-  ),
-];

@@ -90,43 +90,44 @@ class _DashboardPetugasPageState extends State<DashboardPetugasPage> {
 
       // 3. Ambil List Peminjaman Aktif (Limit 3)
       final aktifData = await supabase
-          .from('peminjaman')
-          .select('*, users(nama)')
-          .eq('status', 'dipinjam')
-          .order('created_at', ascending: false)
-          .limit(3);
+        .from('peminjaman')
+        .select('*, users(nama)')
+        .inFilter('status', ['menunggu', 'dipinjam', 'ditolak']) // Filter di sini
+        .order('created_at', ascending: false)
+        .limit(5); // Limit bisa ditambah jika perlu
 
-      _listPeminjamanAktif = (aktifData as List).map((item) {
-        return TransaksiModel(
-          namaPeminjam: item['users']?['nama'] ?? 'Tanpa Nama',
-          alat: 'Kode: ${item['kode_peminjaman']}',
-          durasi: 'Jam ${item['jam_mulai']} - ${item['jam_selesai']}',
-          status: item['status'],
-        );
-      }).toList();
+    _listPeminjamanAktif = (aktifData as List).map((item) {
+      return TransaksiModel(
+        namaPeminjam: item['users']?['nama'] ?? 'Tanpa Nama',
+        alat: 'Kode: ${item['kode_peminjaman']}',
+        durasi: 'Jam ${item['jam_mulai']} - ${item['jam_selesai']}',
+        status: item['status'],
+      );
+    }).toList();
 
       // 4. Ambil List Pengembalian Terbaru (Limit 3)
       final kembaliData = await supabase
-          .from('peminjaman')
-          .select('*, users(nama)')
-          .eq('status', 'dikembalikan')
-          .order('updated_at', ascending: false)
-          .limit(3);
+        .from('peminjaman')
+        .select('*, users(nama)')
+        .inFilter('status', ['dikembalikan', 'selesai']) // Filter di sini
+        .order('updated_at', ascending: false)
+        .limit(5);
 
-      _listPengembalianTerbaru = (kembaliData as List).map((item) {
-        return TransaksiModel(
-          namaPeminjam: item['users']?['nama'] ?? 'Tanpa Nama',
-          alat: 'Kode: ${item['kode_peminjaman']}',
-          durasi: 'Selesai',
-          status: item['status'],
-        );
-      }).toList();
-    } catch (e) {
-      debugPrint('Error load dashboard: $e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    _listPengembalianTerbaru = (kembaliData as List).map((item) {
+      return TransaksiModel(
+        namaPeminjam: item['users']?['nama'] ?? 'Tanpa Nama',
+        alat: 'Kode: ${item['kode_peminjaman']}',
+        durasi: item['status'] == 'selesai' ? 'Telah Selesai' : 'Baru Dikembalikan',
+        status: item['status'],
+      );
+    }).toList();
+
+  } catch (e) {
+    debugPrint('Error load dashboard: $e');
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {

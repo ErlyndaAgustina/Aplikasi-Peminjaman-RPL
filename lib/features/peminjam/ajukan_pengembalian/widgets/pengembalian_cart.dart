@@ -15,8 +15,6 @@ class TransaksiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isTerlambat = transaksi.status == 'terlambat';
-    bool isMenunggu = transaksi.status == 'menunggu';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

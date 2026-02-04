@@ -37,7 +37,7 @@ class TransaksiModel {
 
   return TransaksiModel(
     id: map['id_peminjaman'] ?? '',
-    kode: map['kode_peminjaman'] ?? '-',
+    kode: map['kode_peminjaman'] ?? '-', 
     namaAlat: alat?['nama_alat'] ?? 'Alat tidak diketahui',
     idAlat: unit?['kode_unit'] ?? '-',
     tanggalPinjam: map['tanggal_pinjam'] != null 

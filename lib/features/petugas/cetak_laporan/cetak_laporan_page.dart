@@ -55,7 +55,10 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
                   child: Builder(
                     builder: (context) => GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
-                      child: Icon(Icons.menu, color: Color.fromRGBO(62, 159, 127, 1),),
+                      child: Icon(
+                        Icons.menu,
+                        color: Color.fromRGBO(62, 159, 127, 1),
+                      ),
                     ),
                   ),
                 ),
@@ -126,21 +129,22 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
             const SizedBox(height: 8),
 
             FilterCard(
-              onFilterChanged: ({
-                required jenis,
-                required tglMulai,
-                required tglAkhir,
-                required kategori,
-                required status,
-              }) {
-                setState(() {
-                  this.jenis = jenis;
-                  this.tglMulai = tglMulai;
-                  this.tglAkhir = tglAkhir;
-                  this.kategori = kategori;
-                  this.status = status;
-                });
-              },
+              onFilterChanged:
+                  ({
+                    required jenis,
+                    required tglMulai,
+                    required tglAkhir,
+                    required kategori,
+                    required status,
+                  }) {
+                    setState(() {
+                      this.jenis = jenis;
+                      this.tglMulai = tglMulai;
+                      this.tglAkhir = tglAkhir;
+                      this.kategori = kategori;
+                      this.status = status;
+                    });
+                  },
             ),
 
             const SizedBox(height: 30),
@@ -175,13 +179,14 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
   }
 
   Future<void> _cetakLaporan() async {
-    final query = supabase.from('peminjaman').select('''
+    try {
+      // 1. Tentukan query dasar berdasarkan JENIS LAPORAN
+      var query = supabase.from('peminjaman').select('''
       tanggal_pinjam,
       status,
       users(nama),
       detail_peminjaman(
         alat_unit(
-          status,
           alat(
             nama_alat,
             kategori(nama_kategori)
@@ -190,61 +195,76 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
       )
     ''');
 
-    if (status != 'semua') {
-      query.eq('status', status);
-    }
-
-    if (tglMulai.isNotEmpty && tglAkhir.isNotEmpty) {
-      query
-          .gte('tanggal_pinjam', tglMulai)
-          .lte('tanggal_pinjam', tglAkhir);
-    }
-
-    final List data = await query;
-
-    final List<List<String>> tableData = [
-      ['No', 'Tanggal', 'Nama Peminjam', 'Alat', 'Status'],
-    ];
-
-    int no = 1;
-    for (final row in data) {
-      final peminjam = row['users']['nama'];
-      final tanggal = row['tanggal_pinjam'].toString().split('T').first;
-      final statusPinjam = row['status'];
-
-      for (final detail in row['detail_peminjaman']) {
-        final alat = detail['alat_unit']['alat']['nama_alat'];
-        final kategoriDb =
-            detail['alat_unit']['alat']['kategori']['nama_kategori'];
-
-        if (kategori != 'semua' && kategoriDb != kategori) continue;
-
-        tableData.add([
-          no.toString(),
-          tanggal,
-          peminjam,
-          alat,
-          statusPinjam,
-        ]);
-
-        no++;
+      // 2. Filter berdasarkan STATUS
+      if (status != 'semua') {
+        query = query.eq('status', status);
       }
-    }
 
-    if (tableData.length == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data laporan tidak ditemukan')),
+      // 3. Filter berdasarkan TANGGAL (Gunakan format YYYY-MM-DD)
+      if (tglMulai.isNotEmpty && tglAkhir.isNotEmpty) {
+        // Kita asumsikan format dari controller sudah YYYY-MM-DD
+        query = query
+            .gte('tanggal_pinjam', tglMulai)
+            .lte('tanggal_pinjam', tglAkhir);
+      }
+
+      final List data = await query;
+
+      // 4. Header Tabel
+      final List<List<String>> tableData = [
+        ['No', 'Tanggal', 'Peminjam', 'Alat', 'Kategori', 'Status'],
+      ];
+
+      int no = 1;
+      for (final row in data) {
+        final peminjam = row['users']?['nama'] ?? 'Anonim';
+        final tgl = row['tanggal_pinjam'].toString().split('T').first;
+        final statusPinjam = row['status'];
+
+        for (final detail in row['detail_peminjaman']) {
+          final alatNama = detail['alat_unit']['alat']['nama_alat'];
+          final katNama =
+              detail['alat_unit']['alat']['kategori']['nama_kategori'];
+
+          // 5. Filter KATEGORI di sisi Client (karena nested filter di Supabase agak kompleks)
+          if (kategori != 'semua' &&
+              katNama.toString().toLowerCase() != kategori.toLowerCase()) {
+            continue;
+          }
+
+          tableData.add([
+            no.toString(),
+            tgl,
+            peminjam,
+            alatNama,
+            katNama,
+            statusPinjam.toString().toUpperCase(),
+          ]);
+          no++;
+        }
+      }
+
+      if (tableData.length == 1) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data tidak ditemukan untuk filter ini'),
+          ),
+        );
+        return;
+      }
+
+      // 6. Kirim ke PDF Service
+      await PdfService.generateLaporan(
+        judul: _judulLaporan(),
+        periode: _periode(),
+        kategori: kategori,
+        status: status,
+        tableData: tableData,
       );
-      return;
+    } catch (e) {
+      debugPrint("Error Cetak: $e");
     }
-
-    await PdfService.generateLaporan(
-      judul: _judulLaporan(),
-      periode: _periode(),
-      kategori: kategori,
-      status: status,
-      tableData: tableData,
-    );
   }
 
   String _judulLaporan() {
@@ -264,5 +284,4 @@ class _CetakLaporanPageState extends State<CetakLaporanPage> {
     }
     return '$tglMulai - $tglAkhir';
   }
-
 }

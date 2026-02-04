@@ -3,6 +3,7 @@ import 'delete_confirm_dialog.dart';
 import 'form_unit_dialog.dart';
 import '../models/model.dart';
 import 'status_badge.dart';
+import 'vidio_preview.dart';
 
 const String roboto = 'Roboto';
 
@@ -25,8 +26,27 @@ class UnitAlatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (unit.videoUrl != null && unit.videoUrl!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: VideoPreviewWidget(url: unit.videoUrl!),
+          )
+        else
+          // Placeholder jika tidak ada video
+          Container(
+            width: 60,
+            height: 60,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: const Color.fromRGBO(234, 247, 242, 1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.image, color: Colors.grey),
+          ),
               Expanded(
                 child: Text(
                   'Unit ${unit.kodeUnit}',

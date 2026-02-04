@@ -25,6 +25,7 @@ class AlatCard extends StatelessWidget {
         border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
       ),
       child: Column( // Main wrapper
+      crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,6 +86,30 @@ class AlatCard extends StatelessWidget {
               _buildUnitBadge(totalUnit),
             ],
           ),
+
+          if (alat.deskripsi != null && alat.deskripsi!.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
+            ),
+            child: Text(
+              alat.deskripsi!,
+              style: const TextStyle(
+                fontFamily: roboto,
+                fontSize: 12,
+                color: Colors.black87,
+                fontStyle: FontStyle.italic,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
           
           const SizedBox(height: 16),
           

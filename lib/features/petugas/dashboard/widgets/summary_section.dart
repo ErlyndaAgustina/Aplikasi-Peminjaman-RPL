@@ -64,9 +64,9 @@ class SummarySection extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: SummaryCard(
-                title: 'Selesai',
-                value: counts['selesai'].toString(),
-                icon: Icons.done_all,
+                title: 'Ditolak',
+                value: counts['ditolak'].toString(),
+                icon: Icons.cancel,
                 color: const Color.fromRGBO(255, 2, 2, 1),
               ),
             ),

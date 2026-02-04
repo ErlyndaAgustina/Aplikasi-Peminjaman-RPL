@@ -50,11 +50,22 @@ class _FilterCardState extends State<FilterCard> {
     );
 
     if (picked != null) {
-      controller.text =
-          "${picked.day.toString().padLeft(2, '0')}/"
-          "${picked.month.toString().padLeft(2, '0')}/"
-          "${picked.year}";
+      setState(() {
+        controller.text =
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      });
+      _notifyChanges();
     }
+  }
+
+  void _notifyChanges() {
+    widget.onFilterChanged(
+      jenis: jenisLaporan,
+      tglMulai: startDateController.text,
+      tglAkhir: endDateController.text,
+      kategori: kategoriAlat,
+      status: status,
+    );
   }
 
   @override
@@ -90,13 +101,7 @@ class _FilterCardState extends State<FilterCard> {
             ],
             onChanged: (value) {
               setState(() => jenisLaporan = value!);
-              widget.onFilterChanged(
-                jenis: jenisLaporan,
-                tglMulai: startDateController.text,
-                tglAkhir: endDateController.text,
-                kategori: kategoriAlat,
-                status: status,
-              );
+              _notifyChanges(); // Panggil ini
             },
           ),
 

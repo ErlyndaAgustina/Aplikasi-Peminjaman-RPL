@@ -4,12 +4,14 @@ import '../models/model.dart';
 const String roboto = 'Roboto';
 
 class TransaksiCard extends StatelessWidget {
-  final TransaksiModel data;
+  final PeminjamTransaksiModel data;
   const TransaksiCard({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
-    bool isTerlambat = data.status == StatusTransaksi.terlambat;
+    // Cek status untuk warna
+    final isSelesai = data.status == StatusTransaksi.selesai;
+    final isMenunggu = data.status == StatusTransaksi.menunggu;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -84,7 +86,7 @@ class TransaksiCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    _StatusBadge(isTerlambat: isTerlambat),
+                    _StatusBadge(status: data.status),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -108,12 +110,7 @@ class TransaksiCard extends StatelessWidget {
                     ),
                     Text(
                       data.batasKembali,
-                      style: TextStyle(
-                        fontFamily: roboto,
-                        color: isTerlambat ? Color.fromRGBO(255, 2, 2, 1) : Color.fromRGBO(255, 2, 2, 1),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 11),
                     ),
                   ],
                 ),
@@ -127,26 +124,48 @@ class TransaksiCard extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final bool isTerlambat;
-  const _StatusBadge({required this.isTerlambat});
+  final StatusTransaksi status;
+  const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
+    Color bgColor;
+    Color textColor;
+    String label;
+
+    // Di dalam class _StatusBadge
+switch (status) {
+  case StatusTransaksi.dipinjam:
+    bgColor = const Color.fromRGBO(219, 234, 254, 1);
+    textColor = const Color.fromRGBO(37, 99, 235, 1);
+    label = "Dipinjam";
+    break;
+  case StatusTransaksi.menunggu:
+    bgColor = Colors.orange.shade100;
+    textColor = Colors.orange.shade900;
+    label = "Menunggu";
+    break;
+  case StatusTransaksi.selesai:
+  case StatusTransaksi.dikembalikan: // Tambahkan ini
+    bgColor = const Color.fromRGBO(217, 253, 240, 1);
+    textColor = const Color.fromRGBO(62, 159, 127, 1);
+    label = "Selesai";
+    break;
+  case StatusTransaksi.ditolak:
+    bgColor = Colors.red.shade100;
+    textColor = Colors.red.shade900;
+    label = "Ditolak";
+    break;
+  default:
+    bgColor = Colors.grey.shade200;
+    textColor = Colors.grey.shade700;
+    label = "Proses";
+}
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: isTerlambat ? const Color.fromRGBO(255, 119, 119, 0.22) : const Color.fromRGBO(219, 234, 254, 1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        isTerlambat ? "Terlambat" : "Dipinjam",
-        style: TextStyle(
-          fontFamily: roboto,
-          color: isTerlambat ? Color.fromRGBO(255, 2, 2, 1) : Color.fromRGBO(37, 99, 235, 1),
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20)),
+      child: Text(label, style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 }

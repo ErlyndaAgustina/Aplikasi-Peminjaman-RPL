@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data'; // Tambahkan ini untuk Uint8List
 import '../../services/service.dart';
 import '../models/model.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FormUnitDialog extends StatefulWidget {
   final bool isEdit;
@@ -23,7 +26,17 @@ class FormUnitDialog extends StatefulWidget {
 class _FormUnitDialogState extends State<FormUnitDialog> {
   final _kodeController = TextEditingController();
   final _kondisiController = TextEditingController();
-  String _selectedStatus = 'tersedia';
+  final _videoUrlController =
+      TextEditingController(); // Untuk simpan URL lama/baru
+  String? _selectedStatus;
+
+  static const Color primaryGreen = Color(0xFF43A081);
+  static const Color lightGreenBorder = Color(0xFFD1EBE1);
+  static const Color textHintColor = Color(0xFF6DA391);
+
+  XFile? _selectedVideoXFile; // PAKAI XFILE
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -31,133 +44,312 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
     if (widget.isEdit && widget.unit != null) {
       _kodeController.text = widget.unit!.kodeUnit;
       _kondisiController.text = widget.unit!.kondisi;
+      _videoUrlController.text = widget.unit!.videoUrl ?? '';
       _selectedStatus = widget.unit!.status.toLowerCase();
     }
   }
 
+  Future<void> _pickVideo() async {
+    final XFile? pickedFile = await _picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(minutes: 2),
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedVideoXFile = pickedFile;
+      });
+    }
+  }
+
+  // REVISI: Fungsi upload menerima XFile, bukan File
+  Future<String?> _uploadVideo(XFile xFile) async {
+    try {
+      final fileName = 'vid_${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+      // Ambil bytes langsung dari XFile, ini kunci anti error _Namespace
+      final Uint8List bytes = await xFile.readAsBytes();
+
+      await Supabase.instance.client.storage
+          .from('alat_vidios')
+          .uploadBinary(
+            fileName,
+            bytes,
+            fileOptions: const FileOptions(
+              contentType: 'video/mp4',
+              upsert: false,
+            ),
+          );
+
+      final String publicUrl = Supabase.instance.client.storage
+          .from('alat_vidios')
+          .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (e) {
+      debugPrint("Error upload ke storage: $e");
+      return null;
+    }
+  }
+
   Future<void> _handleSave() async {
+    if (_kodeController.text.isEmpty || _selectedStatus == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Kode unit dan Status harus diisi!")),
+      );
+      return;
+    }
+
+    setState(() => _isUploading = true);
+
+    String finalVideoUrl = _videoUrlController.text.trim();
+
+    // REVISI: Cek _selectedVideoXFile
+    if (_selectedVideoXFile != null) {
+      final uploadedUrl = await _uploadVideo(_selectedVideoXFile!);
+      if (uploadedUrl != null) {
+        finalVideoUrl = uploadedUrl;
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Gagal mengupload video. Cek koneksi/Storage Policy.",
+              ),
+            ),
+          );
+        }
+        setState(() => _isUploading = false);
+        return;
+      }
+    }
+
     final data = {
       'id_alat': widget.idAlat ?? widget.unit?.idAlat,
       'kode_unit': _kodeController.text.trim(),
       'kondisi': _kondisiController.text.trim(),
       'status': _selectedStatus,
+      'video_url': finalVideoUrl,
     };
-
-    if (data['id_alat'] == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("ID Alat tidak ditemukan")));
-      return;
-    }
 
     try {
       if (widget.isEdit) {
         await AlatService().updateUnitAlat(widget.unit!.idUnit, data);
       } else {
+        if (data['id_alat'] == null) throw "ID Alat induk tidak ditemukan";
         await AlatService().insertUnitAlat(data);
       }
+
       widget.onRefresh();
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal: $e")));
+      debugPrint("DB Error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal simpan ke database: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
+  }
+
+  String _generateRandomCode() {
+    final randomNum = (1000 + (DateTime.now().millisecond % 900));
+    return "LTP-$randomNum";
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryGreen = Color.fromRGBO(62, 159, 127, 1);
-
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Colors.white,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                color: primaryGreen,
-                child: Row(
-                  children: [
-                    Icon(
-                      widget.isEdit
-                          ? Icons.edit_note
-                          : Icons.add_circle_outline,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.isEdit ? 'Edit Unit' : 'Tambah Unit',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel('Kode unit *'),
-                    _buildTextField(
-                      hint: 'Contoh: LTP-001-U1',
-                      controller: _kodeController,
-                    ),
-                    const SizedBox(height: 16),
-
-                    _buildLabel('Kondisi Alat *'),
-                    _buildTextField(
-                      hint: 'Masukkan kondisi alat',
-                      controller: _kondisiController,
-                    ),
-                    const SizedBox(height: 16),
-
-                    _buildLabel('Status Ketersediaan *'),
-                    _buildDropdown(),
-                    const SizedBox(height: 32),
-
-                    Row(
+        borderRadius: BorderRadius.circular(28),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeader(),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: _buildButton(
-                            'Batal',
-                            isOutlined: true,
-                            context: context,
-                            onPress: () => Navigator.pop(context),
-                          ),
+                        _buildLabel('Upload Video Unit'),
+                        _buildVideoPicker(),
+                        const SizedBox(height: 18),
+                        _buildLabel('Kode Unit *'),
+                        Row(
+                          children: [
+                            // Bagian TextField yang dipersingkat
+                            Expanded(
+                              child: _buildTextField(
+                                hint: 'LTP-001',
+                                controller: _kodeController,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Tombol Generate
+                            Container(
+                              height: 50, // Sesuaikan dengan tinggi TextField
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F9F6),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: lightGreenBorder),
+                              ),
+                              child: IconButton(
+                                tooltip: "Generate Kode Otomatis",
+                                icon: const Icon(
+                                  Icons.auto_awesome,
+                                  color: primaryGreen,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _kodeController.text =
+                                        _generateRandomCode();
+                                  });
+                                  // Kasih feedback dikit biar keren
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Kode berhasil dibuat otomatis!",
+                                      ),
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildButton(
-                            widget.isEdit ? 'Simpan' : 'Tambah',
-                            context: context,
-                            onPress: _handleSave,
-                          ),
+                        const SizedBox(height: 18),
+                        _buildLabel('Kondisi Alat *'),
+                        _buildTextField(
+                          hint: 'Masukkan kondisi alat',
+                          controller: _kondisiController,
                         ),
+                        const SizedBox(height: 18),
+                        _buildLabel('Status Ketersediaan *'),
+                        _buildDropdown(),
+                        const SizedBox(height: 32),
+                        _buildActionButtons(),
                       ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            if (_isUploading)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black26,
+                  child: const Center(
+                    child: CircularProgressIndicator(color: primaryGreen),
+                  ),
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
+    );
+  }
+
+  // --- UI Components ---
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      color: primaryGreen,
+      child: Row(
+        children: [
+          Icon(
+            widget.isEdit ? Icons.edit : Icons.add_circle,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            widget.isEdit ? 'Edit Unit Alat' : 'Tambah Unit Alat',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoPicker() {
+    return GestureDetector(
+      onTap: _pickVideo,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0F9F6),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: lightGreenBorder),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.cloud_upload, color: primaryGreen, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              _selectedVideoXFile == null
+                  ? (_videoUrlController.text.isNotEmpty
+                        ? 'Video Tersedia (Klik untuk ganti)'
+                        : 'Pilih Video dari Galeri')
+                  : _selectedVideoXFile!.name,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: textHintColor, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: lightGreenBorder),
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: const Text('Batal', style: TextStyle(color: primaryGreen)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _isUploading ? null : _handleSave,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryGreen,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: Text(widget.isEdit ? 'Simpan' : 'Tambah'),
+          ),
+        ),
+      ],
     );
   }
 
@@ -166,11 +358,7 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-          color: Color(0xFF312F34),
-        ),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -179,86 +367,70 @@ class _FormUnitDialogState extends State<FormUnitDialog> {
     required String hint,
     required TextEditingController controller,
   }) {
-    return TextFormField(
+    return TextField(
       controller: controller,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        filled: true,
+        fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1)),
-        ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color.fromRGBO(205, 238, 226, 1)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: lightGreenBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: primaryGreen),
         ),
       ),
     );
   }
 
   Widget _buildDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color.fromRGBO(205, 238, 226, 1)),
+    return DropdownButtonFormField<String>(
+      value: _selectedStatus,
+      hint: const Text(
+        'Pilih status alat',
+        style: TextStyle(color: textHintColor, fontSize: 14),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: _selectedStatus,
-          items: ['tersedia', 'dipinjam', 'rusak', 'perbaikan'].map((
-            String val,
-          ) {
-            return DropdownMenuItem<String>(
-              value: val,
-              child: Text(
-                val[0].toUpperCase() + val.substring(1),
-              ),
-            );
-          }).toList(),
-          onChanged: (value) {
-            if (value != null) setState(() => _selectedStatus = value);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildButton(
-    String text, {
-    bool isOutlined = false,
-    required BuildContext context,
-    required VoidCallback onPress,
-  }) {
-    const Color primaryGreen = Color.fromRGBO(62, 159, 127, 1);
-    return SizedBox(
-      height: 44,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: isOutlined ? Colors.white : primaryGreen,
-          side: isOutlined
-              ? const BorderSide(color: Color.fromRGBO(205, 238, 226, 1))
-              : BorderSide.none,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      items: ['tersedia', 'dipinjam', 'rusak', 'perbaikan'].map((
+        String status,
+      ) {
+        return DropdownMenuItem<String>(
+          value: status,
+          child: Text(
+            status[0].toUpperCase() + status.substring(1),
+            style: const TextStyle(fontSize: 14),
           ),
+        );
+      }).toList(),
+      onChanged: (newValue) {
+        setState(() {
+          _selectedStatus = newValue;
+        });
+      },
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
         ),
-        onPressed: onPress,
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isOutlined ? primaryGreen : Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: lightGreenBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: primaryGreen),
         ),
       ),
+      // Styling dropdown popup
+      dropdownColor: Colors.white,
+      icon: const Icon(Icons.arrow_drop_down, color: primaryGreen),
     );
   }
 }
