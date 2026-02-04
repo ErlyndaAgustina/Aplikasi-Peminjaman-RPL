@@ -59,7 +59,7 @@ class _ManajemenKategoriPageState extends State<ManajemenKategoriPage> {
   }
 
   // --- FUNGSI SIMPAN/UPDATE (CREATE & UPDATE) ---
-  void _showKategoriForm({KategoriModel? kategori, int? index}) {
+  void _showKategoriForm({KategoriModel? kategori}) {
     final bool isEdit = kategori != null;
     final nameController = TextEditingController(text: isEdit ? kategori.nama : "");
     final descController = TextEditingController(text: isEdit ? kategori.deskripsi : "");

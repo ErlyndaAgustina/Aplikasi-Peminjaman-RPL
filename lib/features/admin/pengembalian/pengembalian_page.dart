@@ -16,7 +16,6 @@ class PengembalianPage extends StatefulWidget {
 }
 
 class _PengembalianPageState extends State<PengembalianPage> {
-  final _supabase = Supabase.instance.client;
   final TextEditingController _searchController = TextEditingController();
 
   List<PengembalianModel> _allData = [];
